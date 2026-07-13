@@ -40,6 +40,11 @@
 #undef CONFIG_IPC_NS
 #endif
 
+#if defined(__GENKSYMS__) && \
+	defined(CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT)
+#undef CONFIG_CFS_BANDWIDTH
+#endif
+
 #ifdef CONFIG_CPU_BIG_ENDIAN
 #define __BIG_ENDIAN 4321
 #else

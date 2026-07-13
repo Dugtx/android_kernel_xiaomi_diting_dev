@@ -996,6 +996,18 @@ config CFS_BANDWIDTH
 	  restriction.
 	  See Documentation/scheduler/sched-bwc.rst for more information.
 
+config XIAOMI_CFS_BANDWIDTH_KABI_COMPAT
+	bool "Xiaomi GKI-compatible CFS bandwidth state"
+	depends on CFS_BANDWIDTH
+	help
+	  Preserve Xiaomi's stock scheduler structure layouts while enabling
+	  CFS bandwidth control. The task-group bandwidth object and per-cfs_rq
+	  runtime state are stored outside the frozen structures, and genksyms
+	  retains the stock CFS_BANDWIDTH-disabled view for vendor-module CRCs.
+
+	  This is a device compatibility option. Enable it only when the stock
+	  vendor modules were built with CONFIG_CFS_BANDWIDTH disabled.
+
 config RT_GROUP_SCHED
 	bool "Group scheduling for SCHED_RR/FIFO"
 	depends on CGROUP_SCHED

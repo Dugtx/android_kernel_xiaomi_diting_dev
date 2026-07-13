@@ -423,7 +423,10 @@ struct task_group {
 	struct autogroup	*autogroup;
 #endif
 
+#if !defined(CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT) || \
+	defined(__GENKSYMS__)
 	struct cfs_bandwidth	cfs_bandwidth;
+#endif
 
 #ifdef CONFIG_UCLAMP_TASK_GROUP
 	/* The two decimal precision [%] value requested from user-space */
@@ -438,11 +441,28 @@ struct task_group {
 	ANDROID_VENDOR_DATA_ARRAY(1, 4);
 #endif
 
+#ifdef CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT
+	ANDROID_KABI_USE(1, struct cfs_bandwidth *cfs_bandwidth);
+#else
 	ANDROID_KABI_RESERVE(1);
+#endif
 	ANDROID_KABI_RESERVE(2);
 	ANDROID_KABI_RESERVE(3);
 	ANDROID_KABI_RESERVE(4);
 };
+
+static inline struct cfs_bandwidth *tg_cfs_bandwidth(struct task_group *tg)
+{
+#ifdef CONFIG_CFS_BANDWIDTH
+#ifdef CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT
+	return tg->cfs_bandwidth;
+#else
+	return &tg->cfs_bandwidth;
+#endif
+#else
+	return NULL;
+#endif
+}
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
 #define ROOT_TASK_GROUP_LOAD	NICE_0_LOAD
@@ -603,7 +623,8 @@ struct cfs_rq {
 	struct list_head	leaf_cfs_rq_list;
 	struct task_group	*tg;	/* group that "owns" this runqueue */
 
-#ifdef CONFIG_CFS_BANDWIDTH
+#if defined(CONFIG_CFS_BANDWIDTH) && \
+	!defined(CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT)
 	int			runtime_enabled;
 	s64			runtime_remaining;
 
@@ -618,6 +639,29 @@ struct cfs_rq {
 	ANDROID_VENDOR_DATA_ARRAY(1, 16);
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 };
+
+#if defined(CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT) && \
+	!defined(__GENKSYMS__)
+struct xiaomi_cfs_rq_runtime {
+	struct cfs_rq		*cfs_rq;
+	int			runtime_enabled;
+	s64			runtime_remaining;
+	u64			throttled_clock;
+	u64			throttled_clock_pelt;
+	u64			throttled_clock_pelt_time;
+	int			throttled;
+	int			throttle_count;
+	struct list_head	throttled_list;
+};
+
+struct xiaomi_cfs_rq {
+	struct cfs_rq		cfs_rq;
+	struct xiaomi_cfs_rq_runtime runtime;
+};
+
+DECLARE_PER_CPU(struct xiaomi_cfs_rq_runtime,
+		xiaomi_root_cfs_rq_runtime);
+#endif
 
 static inline int rt_bandwidth_enabled(void)
 {
@@ -1110,6 +1154,53 @@ static inline int cpu_of(struct rq *rq)
 	return 0;
 #endif
 }
+
+#ifdef CONFIG_CFS_BANDWIDTH
+#ifdef CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT
+static inline struct xiaomi_cfs_rq_runtime *
+__cfs_rq_runtime_state(struct cfs_rq *cfs_rq, int cpu)
+{
+	if (cfs_rq == &cfs_rq->rq->cfs)
+		return per_cpu_ptr(&xiaomi_root_cfs_rq_runtime, cpu);
+
+	return &container_of(cfs_rq, struct xiaomi_cfs_rq, cfs_rq)->runtime;
+}
+
+static inline struct xiaomi_cfs_rq_runtime *
+cfs_rq_runtime_state(struct cfs_rq *cfs_rq)
+{
+	return __cfs_rq_runtime_state(cfs_rq, cpu_of(cfs_rq->rq));
+}
+
+#define cfs_rq_runtime_enabled(cfs_rq) \
+	(cfs_rq_runtime_state(cfs_rq)->runtime_enabled)
+#define cfs_rq_runtime_remaining(cfs_rq) \
+	(cfs_rq_runtime_state(cfs_rq)->runtime_remaining)
+#define cfs_rq_throttled_clock(cfs_rq) \
+	(cfs_rq_runtime_state(cfs_rq)->throttled_clock)
+#define cfs_rq_throttled_clock_pelt(cfs_rq) \
+	(cfs_rq_runtime_state(cfs_rq)->throttled_clock_pelt)
+#define cfs_rq_throttled_clock_pelt_time(cfs_rq) \
+	(cfs_rq_runtime_state(cfs_rq)->throttled_clock_pelt_time)
+#define cfs_rq_throttled_state(cfs_rq) \
+	(cfs_rq_runtime_state(cfs_rq)->throttled)
+#define cfs_rq_throttle_count(cfs_rq) \
+	(cfs_rq_runtime_state(cfs_rq)->throttle_count)
+#define cfs_rq_throttled_list(cfs_rq) \
+	(cfs_rq_runtime_state(cfs_rq)->throttled_list)
+#else
+#define cfs_rq_runtime_enabled(cfs_rq) ((cfs_rq)->runtime_enabled)
+#define cfs_rq_runtime_remaining(cfs_rq) ((cfs_rq)->runtime_remaining)
+#define cfs_rq_throttled_clock(cfs_rq) ((cfs_rq)->throttled_clock)
+#define cfs_rq_throttled_clock_pelt(cfs_rq) \
+	((cfs_rq)->throttled_clock_pelt)
+#define cfs_rq_throttled_clock_pelt_time(cfs_rq) \
+	((cfs_rq)->throttled_clock_pelt_time)
+#define cfs_rq_throttled_state(cfs_rq) ((cfs_rq)->throttled)
+#define cfs_rq_throttle_count(cfs_rq) ((cfs_rq)->throttle_count)
+#define cfs_rq_throttled_list(cfs_rq) ((cfs_rq)->throttled_list)
+#endif
+#endif
 
 
 #ifdef CONFIG_SCHED_SMT
