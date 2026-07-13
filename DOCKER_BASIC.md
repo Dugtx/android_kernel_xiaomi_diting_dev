@@ -28,6 +28,7 @@ boot:
 - `build.config.gki.aarch64.docker-cgroup-device`
 - `build.config.gki.aarch64.docker-cgroup-device-compat`
 - `build.config.gki.aarch64.docker-cgroups-compat`
+- `build.config.gki.aarch64.docker-pid-ns`
 
 Only one experimental controller is added per profile, so a failed boot can be
 attributed to a single configuration change.
@@ -63,6 +64,12 @@ the unmounted legacy v1 freezer controller while retaining cgroup2 freeze.
 `docker-cgroups-compat` combines both replacements, so the runtime controller
 set gains DEVICE and PIDS without increasing the stock subsystem count. Each
 profile still requires its own exact symvers comparison and temporary boot.
+
+After both cgroup replacements pass together, `docker-pid-ns` adds only
+`CONFIG_PID_NS`. PID namespaces are required for normal container process
+isolation. `USER_NS`, `SYSVIPC`, `IPC_NS`, and `CHECKPOINT_RESTORE` remain
+deferred because they have different security or internal-layout risks and
+must not be hidden inside the same test round.
 
 ## Build
 
