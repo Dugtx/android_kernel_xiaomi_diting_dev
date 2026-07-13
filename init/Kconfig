@@ -1047,6 +1047,17 @@ config CGROUP_PIDS
 	  since the PIDs limit only affects a process's ability to fork, not to
 	  attach to a cgroup.
 
+config XIAOMI_CGROUP_PIDS_KABI_COMPAT
+	bool "Xiaomi GKI-compatible PIDs controller layout"
+	depends on CGROUP_PIDS && !CGROUP_NET_PRIO
+	help
+	  Preserve the stock net_prio cgroup enum as seen by genksyms while the
+	  running kernel replaces that unused controller with PIDS. This keeps
+	  Xiaomi GKI vendor-module symbol CRCs and cgroup structure sizes stable.
+
+	  This is a device compatibility option and must not be enabled together
+	  with the net_prio controller.
+
 config CGROUP_RDMA
 	bool "RDMA controller"
 	help
