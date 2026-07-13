@@ -122,6 +122,11 @@ int __weak arch_asym_cpu_priority(int cpu)
 #endif
 
 #ifdef CONFIG_CFS_BANDWIDTH
+
+#ifdef CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT
+DEFINE_PER_CPU(struct xiaomi_cfs_rq_runtime,
+	       xiaomi_root_cfs_rq_runtime);
+#endif
 /*
  * Amount of runtime to allocate from global (tg) to local (per-cfs_rq) pool
  * each time a cfs_rq requests quota.
@@ -4838,11 +4843,6 @@ void __refill_cfs_bandwidth_runtime(struct cfs_bandwidth *cfs_b)
 		cfs_b->runtime = cfs_b->quota;
 }
 
-static inline struct cfs_bandwidth *tg_cfs_bandwidth(struct task_group *tg)
-{
-	return &tg->cfs_bandwidth;
-}
-
 /* returns 0 on failure to allocate runtime */
 static int __assign_cfs_rq_runtime(struct cfs_bandwidth *cfs_b,
 				   struct cfs_rq *cfs_rq, u64 target_runtime)
@@ -4852,7 +4852,7 @@ static int __assign_cfs_rq_runtime(struct cfs_bandwidth *cfs_b,
 	lockdep_assert_held(&cfs_b->lock);
 
 	/* note: this is a positive sum as runtime_remaining <= 0 */
-	min_amount = target_runtime - cfs_rq->runtime_remaining;
+	min_amount = target_runtime - cfs_rq_runtime_remaining(cfs_rq);
 
 	if (cfs_b->quota == RUNTIME_INF)
 		amount = min_amount;
@@ -4866,9 +4866,9 @@ static int __assign_cfs_rq_runtime(struct cfs_bandwidth *cfs_b,
 		}
 	}
 
-	cfs_rq->runtime_remaining += amount;
+	cfs_rq_runtime_remaining(cfs_rq) += amount;
 
-	return cfs_rq->runtime_remaining > 0;
+	return cfs_rq_runtime_remaining(cfs_rq) > 0;
 }
 
 /* returns 0 on failure to allocate runtime */
@@ -4887,12 +4887,12 @@ static int assign_cfs_rq_runtime(struct cfs_rq *cfs_rq)
 static void __account_cfs_rq_runtime(struct cfs_rq *cfs_rq, u64 delta_exec)
 {
 	/* dock delta_exec before expiring quota (as it could span periods) */
-	cfs_rq->runtime_remaining -= delta_exec;
+	cfs_rq_runtime_remaining(cfs_rq) -= delta_exec;
 
-	if (likely(cfs_rq->runtime_remaining > 0))
+	if (likely(cfs_rq_runtime_remaining(cfs_rq) > 0))
 		return;
 
-	if (cfs_rq->throttled)
+	if (cfs_rq_throttled_state(cfs_rq))
 		return;
 	/*
 	 * if we're unable to extend our runtime we resched so that the active
@@ -4905,7 +4905,7 @@ static void __account_cfs_rq_runtime(struct cfs_rq *cfs_rq, u64 delta_exec)
 static __always_inline
 void account_cfs_rq_runtime(struct cfs_rq *cfs_rq, u64 delta_exec)
 {
-	if (!cfs_bandwidth_used() || !cfs_rq->runtime_enabled)
+	if (!cfs_bandwidth_used() || !cfs_rq_runtime_enabled(cfs_rq))
 		return;
 
 	__account_cfs_rq_runtime(cfs_rq, delta_exec);
@@ -4913,13 +4913,13 @@ void account_cfs_rq_runtime(struct cfs_rq *cfs_rq, u64 delta_exec)
 
 static inline int cfs_rq_throttled(struct cfs_rq *cfs_rq)
 {
-	return cfs_bandwidth_used() && cfs_rq->throttled;
+	return cfs_bandwidth_used() && cfs_rq_throttled_state(cfs_rq);
 }
 
 /* check whether cfs_rq, or any parent, is throttled */
 static inline int throttled_hierarchy(struct cfs_rq *cfs_rq)
 {
-	return cfs_bandwidth_used() && cfs_rq->throttle_count;
+	return cfs_bandwidth_used() && cfs_rq_throttle_count(cfs_rq);
 }
 
 /*
@@ -4944,10 +4944,10 @@ static int tg_unthrottle_up(struct task_group *tg, void *data)
 	struct rq *rq = data;
 	struct cfs_rq *cfs_rq = tg->cfs_rq[cpu_of(rq)];
 
-	cfs_rq->throttle_count--;
-	if (!cfs_rq->throttle_count) {
-		cfs_rq->throttled_clock_pelt_time += rq_clock_task_mult(rq) -
-					     cfs_rq->throttled_clock_pelt;
+	cfs_rq_throttle_count(cfs_rq)--;
+	if (!cfs_rq_throttle_count(cfs_rq)) {
+		cfs_rq_throttled_clock_pelt_time(cfs_rq) += rq_clock_task_mult(rq) -
+					     cfs_rq_throttled_clock_pelt(cfs_rq);
 
 		/* Add cfs_rq with already running entity in the list */
 		if (cfs_rq->nr_running >= 1)
@@ -4963,11 +4963,11 @@ static int tg_throttle_down(struct task_group *tg, void *data)
 	struct cfs_rq *cfs_rq = tg->cfs_rq[cpu_of(rq)];
 
 	/* group is entering throttled state, stop time */
-	if (!cfs_rq->throttle_count) {
-		cfs_rq->throttled_clock_pelt = rq_clock_task_mult(rq);
+	if (!cfs_rq_throttle_count(cfs_rq)) {
+		cfs_rq_throttled_clock_pelt(cfs_rq) = rq_clock_task_mult(rq);
 		list_del_leaf_cfs_rq(cfs_rq);
 	}
-	cfs_rq->throttle_count++;
+	cfs_rq_throttle_count(cfs_rq)++;
 
 	return 0;
 }
@@ -4992,7 +4992,7 @@ static bool throttle_cfs_rq(struct cfs_rq *cfs_rq)
 		 */
 		dequeue = 0;
 	} else {
-		list_add_tail_rcu(&cfs_rq->throttled_list,
+		list_add_tail_rcu(&cfs_rq_throttled_list(cfs_rq),
 				  &cfs_b->throttled_cfs_rq);
 	}
 	raw_spin_unlock(&cfs_b->lock);
@@ -5036,8 +5036,8 @@ static bool throttle_cfs_rq(struct cfs_rq *cfs_rq)
 	 * Note: distribution will already see us throttled via the
 	 * throttled-list.  rq->lock protects completion.
 	 */
-	cfs_rq->throttled = 1;
-	cfs_rq->throttled_clock = rq_clock(rq);
+	cfs_rq_throttled_state(cfs_rq) = 1;
+	cfs_rq_throttled_clock(cfs_rq) = rq_clock(rq);
 	return true;
 }
 
@@ -5050,13 +5050,13 @@ void unthrottle_cfs_rq(struct cfs_rq *cfs_rq)
 
 	se = cfs_rq->tg->se[cpu_of(rq)];
 
-	cfs_rq->throttled = 0;
+	cfs_rq_throttled_state(cfs_rq) = 0;
 
 	update_rq_clock(rq);
 
 	raw_spin_lock(&cfs_b->lock);
-	cfs_b->throttled_time += rq_clock(rq) - cfs_rq->throttled_clock;
-	list_del_rcu(&cfs_rq->throttled_list);
+	cfs_b->throttled_time += rq_clock(rq) - cfs_rq_throttled_clock(cfs_rq);
+	list_del_rcu(&cfs_rq_throttled_list(cfs_rq));
 	raw_spin_unlock(&cfs_b->lock);
 
 	/* update hierarchical throttle state */
@@ -5129,33 +5129,43 @@ unthrottle_throttle:
 static void distribute_cfs_runtime(struct cfs_bandwidth *cfs_b)
 {
 	struct cfs_rq *cfs_rq;
+	struct rq *rq;
+	struct rq_flags rf;
+#ifdef CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT
+	struct xiaomi_cfs_rq_runtime *runtime_state;
+#endif
 	u64 runtime, remaining = 1;
 
 	rcu_read_lock();
+#ifdef CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT
+	list_for_each_entry_rcu(runtime_state, &cfs_b->throttled_cfs_rq,
+				throttled_list) {
+		cfs_rq = runtime_state->cfs_rq;
+#else
 	list_for_each_entry_rcu(cfs_rq, &cfs_b->throttled_cfs_rq,
 				throttled_list) {
-		struct rq *rq = rq_of(cfs_rq);
-		struct rq_flags rf;
+#endif
+		rq = rq_of(cfs_rq);
 
 		rq_lock_irqsave(rq, &rf);
 		if (!cfs_rq_throttled(cfs_rq))
 			goto next;
 
 		/* By the above check, this should never be true */
-		SCHED_WARN_ON(cfs_rq->runtime_remaining > 0);
+		SCHED_WARN_ON(cfs_rq_runtime_remaining(cfs_rq) > 0);
 
 		raw_spin_lock(&cfs_b->lock);
-		runtime = -cfs_rq->runtime_remaining + 1;
+		runtime = -cfs_rq_runtime_remaining(cfs_rq) + 1;
 		if (runtime > cfs_b->runtime)
 			runtime = cfs_b->runtime;
 		cfs_b->runtime -= runtime;
 		remaining = cfs_b->runtime;
 		raw_spin_unlock(&cfs_b->lock);
 
-		cfs_rq->runtime_remaining += runtime;
+		cfs_rq_runtime_remaining(cfs_rq) += runtime;
 
 		/* we check whether we're throttled above */
-		if (cfs_rq->runtime_remaining > 0)
+		if (cfs_rq_runtime_remaining(cfs_rq) > 0)
 			unthrottle_cfs_rq(cfs_rq);
 
 next:
@@ -5281,7 +5291,7 @@ static void start_cfs_slack_bandwidth(struct cfs_bandwidth *cfs_b)
 static void __return_cfs_rq_runtime(struct cfs_rq *cfs_rq)
 {
 	struct cfs_bandwidth *cfs_b = tg_cfs_bandwidth(cfs_rq->tg);
-	s64 slack_runtime = cfs_rq->runtime_remaining - min_cfs_rq_runtime;
+	s64 slack_runtime = cfs_rq_runtime_remaining(cfs_rq) - min_cfs_rq_runtime;
 
 	if (slack_runtime <= 0)
 		return;
@@ -5298,7 +5308,7 @@ static void __return_cfs_rq_runtime(struct cfs_rq *cfs_rq)
 	raw_spin_unlock(&cfs_b->lock);
 
 	/* even if it's not valid for return we don't want to try again */
-	cfs_rq->runtime_remaining -= slack_runtime;
+	cfs_rq_runtime_remaining(cfs_rq) -= slack_runtime;
 }
 
 static __always_inline void return_cfs_rq_runtime(struct cfs_rq *cfs_rq)
@@ -5306,7 +5316,7 @@ static __always_inline void return_cfs_rq_runtime(struct cfs_rq *cfs_rq)
 	if (!cfs_bandwidth_used())
 		return;
 
-	if (!cfs_rq->runtime_enabled || cfs_rq->nr_running)
+	if (!cfs_rq_runtime_enabled(cfs_rq) || cfs_rq->nr_running)
 		return;
 
 	__return_cfs_rq_runtime(cfs_rq);
@@ -5355,7 +5365,7 @@ static void check_enqueue_throttle(struct cfs_rq *cfs_rq)
 		return;
 
 	/* an active group must be handled by the update_curr()->put() path */
-	if (!cfs_rq->runtime_enabled || cfs_rq->curr)
+	if (!cfs_rq_runtime_enabled(cfs_rq) || cfs_rq->curr)
 		return;
 
 	/* ensure the group is not already throttled */
@@ -5364,7 +5374,7 @@ static void check_enqueue_throttle(struct cfs_rq *cfs_rq)
 
 	/* update runtime allocation */
 	account_cfs_rq_runtime(cfs_rq, 0);
-	if (cfs_rq->runtime_remaining <= 0)
+	if (cfs_rq_runtime_remaining(cfs_rq) <= 0)
 		throttle_cfs_rq(cfs_rq);
 }
 
@@ -5381,8 +5391,8 @@ static void sync_throttle(struct task_group *tg, int cpu)
 	cfs_rq = tg->cfs_rq[cpu];
 	pcfs_rq = tg->parent->cfs_rq[cpu];
 
-	cfs_rq->throttle_count = pcfs_rq->throttle_count;
-	cfs_rq->throttled_clock_pelt = rq_clock_task_mult(cpu_rq(cpu));
+	cfs_rq_throttle_count(cfs_rq) = cfs_rq_throttle_count(pcfs_rq);
+	cfs_rq_throttled_clock_pelt(cfs_rq) = rq_clock_task_mult(cpu_rq(cpu));
 }
 
 /* conditionally throttle active cfs_rq's from put_prev_entity() */
@@ -5391,7 +5401,7 @@ static bool check_cfs_rq_runtime(struct cfs_rq *cfs_rq)
 	if (!cfs_bandwidth_used())
 		return false;
 
-	if (likely(!cfs_rq->runtime_enabled || cfs_rq->runtime_remaining > 0))
+	if (likely(!cfs_rq_runtime_enabled(cfs_rq) || cfs_rq_runtime_remaining(cfs_rq) > 0))
 		return false;
 
 	/*
@@ -5485,10 +5495,16 @@ void init_cfs_bandwidth(struct cfs_bandwidth *cfs_b)
 	cfs_b->slack_started = false;
 }
 
-static void init_cfs_rq_runtime(struct cfs_rq *cfs_rq)
+static void init_cfs_rq_runtime(struct cfs_rq *cfs_rq, int cpu)
 {
-	cfs_rq->runtime_enabled = 0;
-	INIT_LIST_HEAD(&cfs_rq->throttled_list);
+#ifdef CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT
+	struct xiaomi_cfs_rq_runtime *runtime_state;
+
+	runtime_state = __cfs_rq_runtime_state(cfs_rq, cpu);
+	runtime_state->cfs_rq = cfs_rq;
+#endif
+	cfs_rq_runtime_enabled(cfs_rq) = 0;
+	INIT_LIST_HEAD(&cfs_rq_throttled_list(cfs_rq));
 }
 
 void start_cfs_bandwidth(struct cfs_bandwidth *cfs_b)
@@ -5529,11 +5545,11 @@ static void __maybe_unused update_runtime_enabled(struct rq *rq)
 
 	rcu_read_lock();
 	list_for_each_entry_rcu(tg, &task_groups, list) {
-		struct cfs_bandwidth *cfs_b = &tg->cfs_bandwidth;
+		struct cfs_bandwidth *cfs_b = tg_cfs_bandwidth(tg);
 		struct cfs_rq *cfs_rq = tg->cfs_rq[cpu_of(rq)];
 
 		raw_spin_lock(&cfs_b->lock);
-		cfs_rq->runtime_enabled = cfs_b->quota != RUNTIME_INF;
+		cfs_rq_runtime_enabled(cfs_rq) = cfs_b->quota != RUNTIME_INF;
 		raw_spin_unlock(&cfs_b->lock);
 	}
 	rcu_read_unlock();
@@ -5550,19 +5566,19 @@ static void __maybe_unused unthrottle_offline_cfs_rqs(struct rq *rq)
 	list_for_each_entry_rcu(tg, &task_groups, list) {
 		struct cfs_rq *cfs_rq = tg->cfs_rq[cpu_of(rq)];
 
-		if (!cfs_rq->runtime_enabled)
+		if (!cfs_rq_runtime_enabled(cfs_rq))
 			continue;
 
 		/*
 		 * clock_task is not advancing so we just need to make sure
 		 * there's some valid quota amount
 		 */
-		cfs_rq->runtime_remaining = 1;
+		cfs_rq_runtime_remaining(cfs_rq) = 1;
 		/*
 		 * Offline rq is schedulable till CPU is completely disabled
 		 * in take_cpu_down(), so we prevent new cfs throttling here.
 		 */
-		cfs_rq->runtime_enabled = 0;
+		cfs_rq_runtime_enabled(cfs_rq) = 0;
 
 		if (cfs_rq_throttled(cfs_rq))
 			unthrottle_cfs_rq(cfs_rq);
@@ -5602,13 +5618,9 @@ static inline int throttled_lb_pair(struct task_group *tg,
 void init_cfs_bandwidth(struct cfs_bandwidth *cfs_b) {}
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
-static void init_cfs_rq_runtime(struct cfs_rq *cfs_rq) {}
+static void init_cfs_rq_runtime(struct cfs_rq *cfs_rq, int cpu) {}
 #endif
 
-static inline struct cfs_bandwidth *tg_cfs_bandwidth(struct task_group *tg)
-{
-	return NULL;
-}
 static inline void destroy_cfs_bandwidth(struct cfs_bandwidth *cfs_b) {}
 static inline void update_runtime_enabled(struct rq *rq) {}
 static inline void unthrottle_offline_cfs_rqs(struct rq *rq) {}
@@ -11391,11 +11403,31 @@ static void task_change_group_fair(struct task_struct *p, int type)
 	}
 }
 
+static struct cfs_rq *alloc_fair_cfs_rq(int cpu)
+{
+#ifdef CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT
+	struct xiaomi_cfs_rq *cfs_rq_ext;
+
+	BUILD_BUG_ON(offsetof(struct xiaomi_cfs_rq, cfs_rq));
+	cfs_rq_ext = kzalloc_node(sizeof(*cfs_rq_ext), GFP_KERNEL,
+				   cpu_to_node(cpu));
+	if (!cfs_rq_ext)
+		return NULL;
+
+	return &cfs_rq_ext->cfs_rq;
+#else
+	return kzalloc_node(sizeof(struct cfs_rq), GFP_KERNEL,
+			    cpu_to_node(cpu));
+#endif
+}
+
 void free_fair_sched_group(struct task_group *tg)
 {
+	struct cfs_bandwidth *cfs_b = tg_cfs_bandwidth(tg);
 	int i;
 
-	destroy_cfs_bandwidth(tg_cfs_bandwidth(tg));
+	if (cfs_b)
+		destroy_cfs_bandwidth(cfs_b);
 
 	for_each_possible_cpu(i) {
 		if (tg->cfs_rq)
@@ -11406,6 +11438,10 @@ void free_fair_sched_group(struct task_group *tg)
 
 	kfree(tg->cfs_rq);
 	kfree(tg->se);
+#ifdef CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT
+	kfree(cfs_b);
+	tg->cfs_bandwidth = NULL;
+#endif
 }
 
 int alloc_fair_sched_group(struct task_group *tg, struct task_group *parent)
@@ -11423,11 +11459,15 @@ int alloc_fair_sched_group(struct task_group *tg, struct task_group *parent)
 
 	tg->shares = NICE_0_LOAD;
 
+#ifdef CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT
+	tg->cfs_bandwidth = kzalloc(sizeof(*tg->cfs_bandwidth), GFP_KERNEL);
+	if (!tg->cfs_bandwidth)
+		goto err;
+#endif
 	init_cfs_bandwidth(tg_cfs_bandwidth(tg));
 
 	for_each_possible_cpu(i) {
-		cfs_rq = kzalloc_node(sizeof(struct cfs_rq),
-				      GFP_KERNEL, cpu_to_node(i));
+		cfs_rq = alloc_fair_cfs_rq(i);
 		if (!cfs_rq)
 			goto err;
 
@@ -11500,7 +11540,7 @@ void init_tg_cfs_entry(struct task_group *tg, struct cfs_rq *cfs_rq,
 
 	cfs_rq->tg = tg;
 	cfs_rq->rq = rq;
-	init_cfs_rq_runtime(cfs_rq);
+	init_cfs_rq_runtime(cfs_rq, cpu);
 
 	tg->cfs_rq[cpu] = cfs_rq;
 	tg->se[cpu] = se;
