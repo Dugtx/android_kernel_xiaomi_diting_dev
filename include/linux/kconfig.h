@@ -24,6 +24,11 @@
 #define CONFIG_CGROUP_NET_PRIO 1
 #endif
 
+#if defined(__GENKSYMS__) && \
+	defined(CONFIG_XIAOMI_BRIDGE_NETFILTER_KABI_COMPAT)
+#undef CONFIG_BRIDGE_NETFILTER
+#endif
+
 #ifdef CONFIG_CPU_BIG_ENDIAN
 #define __BIG_ENDIAN 4321
 #else
