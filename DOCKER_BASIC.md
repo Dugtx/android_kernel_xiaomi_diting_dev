@@ -26,6 +26,8 @@ boot:
 - `build.config.gki.aarch64.docker-cgroup-pids`
 - `build.config.gki.aarch64.docker-cgroup-pids-compat`
 - `build.config.gki.aarch64.docker-cgroup-device`
+- `build.config.gki.aarch64.docker-cgroup-device-compat`
+- `build.config.gki.aarch64.docker-cgroups-compat`
 
 Only one experimental controller is added per profile, so a failed boot can be
 attributed to a single configuration change.
@@ -55,6 +57,12 @@ HyperOS `OS2.0.211.0.VLFCNXM`. KernelSU-Next 3.3.0, all observed vendor
 modules, Wi-Fi, camera, and Android userspace remained operational. A temporary
 cgroup with `pids.max=1` rejected additional forks and incremented
 `pids.events`. No persistent boot slot was written.
+
+The device-controller compatibility profile follows the same rule: it replaces
+the unmounted legacy v1 freezer controller while retaining cgroup2 freeze.
+`docker-cgroups-compat` combines both replacements, so the runtime controller
+set gains DEVICE and PIDS without increasing the stock subsystem count. Each
+profile still requires its own exact symvers comparison and temporary boot.
 
 ## Build
 

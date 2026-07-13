@@ -1117,6 +1117,18 @@ config CGROUP_DEVICE
 	  Provides a cgroup controller implementing whitelists for
 	  devices which a process in the cgroup can mknod or open.
 
+config XIAOMI_CGROUP_DEVICE_KABI_COMPAT
+	bool "Xiaomi GKI-compatible device controller layout"
+	depends on CGROUP_DEVICE && !CGROUP_FREEZER
+	help
+	  Preserve the stock legacy freezer cgroup enum as seen by genksyms
+	  while the running kernel replaces that unused v1 controller with the
+	  device controller. This keeps Xiaomi GKI vendor-module symbol CRCs and
+	  cgroup structure sizes stable. The cgroup2 freezer remains available.
+
+	  This is a device compatibility option and must not be enabled together
+	  with the legacy freezer controller.
+
 config CGROUP_CPUACCT
 	bool "Simple CPU accounting controller"
 	help
