@@ -48,6 +48,14 @@ The resulting `vmlinux.symvers` must be byte-identical to the stock ACK build,
 and the profile must still pass temporary boot and runtime controller tests
 before it is considered safe.
 
+## Redmi K50 Ultra validation
+
+The compatibility profile from commit `b550c01d5` passed temporary boot on
+HyperOS `OS2.0.211.0.VLFCNXM`. KernelSU-Next 3.3.0, all observed vendor
+modules, Wi-Fi, camera, and Android userspace remained operational. A temporary
+cgroup with `pids.max=1` rejected additional forks and incremented
+`pids.events`. No persistent boot slot was written.
+
 ## Build
 
 From the ACK build root:
