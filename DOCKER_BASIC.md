@@ -75,7 +75,10 @@ must not be hidden inside the same test round.
 `docker-netfilter` then adds only bridge netfilter and the xtables `addrtype`
 match on top of the validated PID namespace profile. These are required for
 normal Docker bridge firewalling and route-type rules. IPv6 NAT and additional
-virtual interfaces remain separate future rounds.
+virtual interfaces remain separate future rounds. Because bridge netfilter's
+conditional header types otherwise change hundreds of exported symbol CRCs,
+the profile keeps a stock BRIDGE_NETFILTER-disabled view only while genksyms
+calculates KMI CRCs. Runtime code and configuration remain enabled.
 
 ## Build
 
