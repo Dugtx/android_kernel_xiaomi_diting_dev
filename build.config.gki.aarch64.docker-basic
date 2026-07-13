@@ -19,9 +19,15 @@ function update_docker_basic_config() {
     for fragment in ${DOCKER_CONFIG_FRAGMENTS}; do
         while IFS= read -r option; do
             case "${option}" in
-                CONFIG_*=y)
+                CONFIG_*=y|CONFIG_*=m)
                     grep -qxF "${option}" "${OUT_DIR}/.config" || {
                         echo "ERROR: Docker option was not resolved: ${option}" >&2
+                        return 1
+                    }
+                    ;;
+                \#\ CONFIG_*\ is\ not\ set)
+                    grep -qxF "${option}" "${OUT_DIR}/.config" || {
+                        echo "ERROR: Docker option was not disabled: ${option}" >&2
                         return 1
                     }
                     ;;

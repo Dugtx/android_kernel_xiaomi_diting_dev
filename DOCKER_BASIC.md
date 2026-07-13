@@ -24,10 +24,23 @@ profiles because the earlier combined candidate did not complete a temporary
 boot:
 
 - `build.config.gki.aarch64.docker-cgroup-pids`
+- `build.config.gki.aarch64.docker-cgroup-pids-compat`
 - `build.config.gki.aarch64.docker-cgroup-device`
 
 Only one experimental controller is added per profile, so a failed boot can be
 attributed to a single configuration change.
+
+The direct PIDS profile is retained as a diagnostic reproducer. It passes the
+GKI KMI checks, but it increases `CGROUP_SUBSYS_COUNT` from 7 to 8 and grows
+the internal `struct css_set` by 24 bytes. The Redmi K50 Ultra returns to its
+persistent slot during temporary boot, which is consistent with an out-of-tree
+Xiaomi module using the stock cgroup layout without that layout being covered
+by the exported KMI symbol CRCs.
+
+The `docker-cgroup-pids-compat` profile instead disables the unused legacy
+`net_prio` controller and enables PIDS in its final subsystem slot. This keeps
+`CGROUP_SUBSYS_COUNT` and `struct css_set` at their stock sizes. It must still
+pass temporary boot and runtime controller tests before it is considered safe.
 
 ## Build
 
