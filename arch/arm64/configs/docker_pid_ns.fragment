@@ -1,0 +1,3 @@
+# Docker process isolation round.
+# Keep USER_NS, SYSVIPC, IPC_NS, and CHECKPOINT_RESTORE in later profiles.
+CONFIG_PID_NS=y
