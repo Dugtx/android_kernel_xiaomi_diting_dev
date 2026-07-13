@@ -11,7 +11,6 @@ for the earlier ad-hoc Docker Round 2 build.
 The first round contains only the low-risk options already proven to compile
 in the previous Docker Basic output:
 
-- PID and device cgroup controllers
 - file-handle syscalls used by container runtimes
 - devtmpfs support
 - tmpfs ACL and extended attributes
@@ -19,6 +18,16 @@ in the previous Docker Basic output:
 
 Namespace and KABI-sensitive options such as `PID_NS`, `SYSVIPC`,
 `POSIX_MQUEUE`, and `USER_NS` are intentionally deferred to isolated rounds.
+
+The PID and device cgroup controllers are also separated into dedicated
+profiles because the earlier combined candidate did not complete a temporary
+boot:
+
+- `build.config.gki.aarch64.docker-cgroup-pids`
+- `build.config.gki.aarch64.docker-cgroup-device`
+
+Only one experimental controller is added per profile, so a failed boot can be
+attributed to a single configuration change.
 
 ## Build
 

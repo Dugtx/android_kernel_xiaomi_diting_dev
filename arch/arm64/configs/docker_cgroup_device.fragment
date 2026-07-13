@@ -1,0 +1,2 @@
+# Isolated experiment: add the Docker device cgroup controller.
+CONFIG_CGROUP_DEVICE=y
