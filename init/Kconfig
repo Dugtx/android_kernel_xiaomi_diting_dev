@@ -1212,6 +1212,15 @@ config IPC_NS
 	  In this namespace tasks work with IPC ids which correspond to
 	  different IPC objects in different namespaces.
 
+config XIAOMI_IPC_KABI_COMPAT
+	bool "Xiaomi GKI-compatible IPC structure layout"
+	depends on SYSVIPC && POSIX_MQUEUE && IPC_NS
+	help
+	  Store System V IPC and POSIX mqueue accounting state in existing
+	  Android kABI reserves. Genksyms retains the stock configuration view,
+	  keeping Xiaomi vendor-module CRCs and pre-existing structure layouts
+	  stable while IPC namespaces remain enabled at runtime.
+
 config USER_NS
 	bool "User namespace"
 	default n

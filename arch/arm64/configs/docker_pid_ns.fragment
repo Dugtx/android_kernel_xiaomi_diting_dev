@@ -1,3 +1,4 @@
 # Docker process isolation round.
-# Keep USER_NS, SYSVIPC, IPC_NS, and CHECKPOINT_RESTORE in later profiles.
+# Keep USER_NS and CHECKPOINT_RESTORE in later profiles. IPC support is added
+# by the separate docker-ipc profile so this PID-only image remains bisectable.
 CONFIG_PID_NS=y
