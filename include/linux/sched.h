@@ -967,7 +967,7 @@ struct task_struct {
 
 	struct nameidata		*nameidata;
 
-#ifdef CONFIG_SYSVIPC
+#if defined(CONFIG_SYSVIPC) && !defined(CONFIG_XIAOMI_IPC_KABI_COMPAT)
 	struct sysv_sem			sysvsem;
 	struct sysv_shm			sysvshm;
 #endif
@@ -1378,9 +1378,14 @@ struct task_struct {
 	/* PF_IO_WORKER */
 	ANDROID_KABI_USE(1, void *pf_io_worker);
 
+#ifdef CONFIG_XIAOMI_IPC_KABI_COMPAT
+	ANDROID_KABI_USE(2, struct sysv_sem sysvsem);
+	ANDROID_KABI_USE_TWO_RESERVES(3, 4, struct sysv_shm sysvshm);
+#else
 	ANDROID_KABI_RESERVE(2);
 	ANDROID_KABI_RESERVE(3);
 	ANDROID_KABI_RESERVE(4);
+#endif
 	ANDROID_KABI_RESERVE(5);
 	ANDROID_KABI_RESERVE(6);
 	ANDROID_KABI_RESERVE(7);
