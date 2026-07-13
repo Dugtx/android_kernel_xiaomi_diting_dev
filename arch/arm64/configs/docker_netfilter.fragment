@@ -1,0 +1,3 @@
+# Docker bridge firewalling and route-type matching.
+CONFIG_BRIDGE_NETFILTER=y
+CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y
