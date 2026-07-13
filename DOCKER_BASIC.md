@@ -39,8 +39,14 @@ by the exported KMI symbol CRCs.
 
 The `docker-cgroup-pids-compat` profile instead disables the unused legacy
 `net_prio` controller and enables PIDS in its final subsystem slot. This keeps
-`CGROUP_SUBSYS_COUNT` and `struct css_set` at their stock sizes. It must still
-pass temporary boot and runtime controller tests before it is considered safe.
+`CGROUP_SUBSYS_COUNT` and `struct css_set` at their stock sizes. A guarded
+genksyms compatibility view retains the stock net_prio enum only while module
+symbol CRCs are generated. The override is applied at the Kconfig preprocessor
+boundary so all exported cgroup and network types see the stock configuration;
+the compiled kernel still contains PIDS instead.
+The resulting `vmlinux.symvers` must be byte-identical to the stock ACK build,
+and the profile must still pass temporary boot and runtime controller tests
+before it is considered safe.
 
 ## Build
 

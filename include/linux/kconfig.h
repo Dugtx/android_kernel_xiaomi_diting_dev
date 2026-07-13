@@ -6,6 +6,18 @@
 
 #include <generated/autoconf.h>
 
+/*
+ * Xiaomi's out-of-tree modules were built with net_prio as the final cgroup
+ * subsystem.  The compatibility profile replaces it with PIDS at runtime,
+ * but genksyms must retain the stock configuration view so the replacement
+ * does not alter vendor-module symbol CRCs through exported network types.
+ */
+#if defined(__GENKSYMS__) && \
+	defined(CONFIG_XIAOMI_CGROUP_PIDS_KABI_COMPAT)
+#undef CONFIG_CGROUP_PIDS
+#define CONFIG_CGROUP_NET_PRIO 1
+#endif
+
 #ifdef CONFIG_CPU_BIG_ENDIAN
 #define __BIG_ENDIAN 4321
 #else

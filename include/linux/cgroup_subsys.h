@@ -45,7 +45,9 @@ SUBSYS(net_cls)
 SUBSYS(perf_event)
 #endif
 
-#if IS_ENABLED(CONFIG_CGROUP_NET_PRIO)
+#if IS_ENABLED(CONFIG_CGROUP_NET_PRIO) || \
+	(defined(__GENKSYMS__) && \
+	 IS_ENABLED(CONFIG_XIAOMI_CGROUP_PIDS_KABI_COMPAT))
 SUBSYS(net_prio)
 #endif
 
@@ -53,7 +55,9 @@ SUBSYS(net_prio)
 SUBSYS(hugetlb)
 #endif
 
-#if IS_ENABLED(CONFIG_CGROUP_PIDS)
+#if IS_ENABLED(CONFIG_CGROUP_PIDS) && \
+	(!defined(__GENKSYMS__) || \
+	 !IS_ENABLED(CONFIG_XIAOMI_CGROUP_PIDS_KABI_COMPAT))
 SUBSYS(pids)
 #endif
 
