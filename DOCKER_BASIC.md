@@ -29,6 +29,7 @@ boot:
 - `build.config.gki.aarch64.docker-cgroup-device-compat`
 - `build.config.gki.aarch64.docker-cgroups-compat`
 - `build.config.gki.aarch64.docker-pid-ns`
+- `build.config.gki.aarch64.docker-netfilter`
 
 Only one experimental controller is added per profile, so a failed boot can be
 attributed to a single configuration change.
@@ -70,6 +71,11 @@ After both cgroup replacements pass together, `docker-pid-ns` adds only
 isolation. `USER_NS`, `SYSVIPC`, `IPC_NS`, and `CHECKPOINT_RESTORE` remain
 deferred because they have different security or internal-layout risks and
 must not be hidden inside the same test round.
+
+`docker-netfilter` then adds only bridge netfilter and the xtables `addrtype`
+match on top of the validated PID namespace profile. These are required for
+normal Docker bridge firewalling and route-type rules. IPv6 NAT and additional
+virtual interfaces remain separate future rounds.
 
 ## Build
 
