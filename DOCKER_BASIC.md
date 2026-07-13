@@ -78,7 +78,8 @@ normal Docker bridge firewalling and route-type rules. IPv6 NAT and additional
 virtual interfaces remain separate future rounds. Because bridge netfilter's
 conditional header types otherwise change hundreds of exported symbol CRCs,
 the profile keeps a stock BRIDGE_NETFILTER-disabled view only while genksyms
-calculates KMI CRCs. Runtime code and configuration remain enabled.
+calculates KMI CRCs, including the selected bridge netfilter family macro.
+Runtime code and configuration remain enabled.
 
 ## Build
 
