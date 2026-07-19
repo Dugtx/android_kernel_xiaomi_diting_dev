@@ -1,10 +1,15 @@
-# Docker Basic kernel profile
+# Docker kernel profile for Redmi K50 Ultra
 
 Author: Dugtx
 
 This profile extends the pinned Android 12 5.10 GKI configuration without
 editing Google's `gki_defconfig`. It represents the reproducible replacement
-for the earlier ad-hoc Docker Round 2 build.
+for the earlier ad-hoc Docker Round 2 build. The final profile is
+`build.config.gki.aarch64.docker-network`.
+
+This branch does not contain KernelSU, SUSFS, Magisk, a root manager, or a
+modified Android ramdisk. Root access is a separate boot-image/userspace
+choice.
 
 ## Scope
 
@@ -54,11 +59,11 @@ before it is considered safe.
 
 ## Redmi K50 Ultra validation
 
-The compatibility profile from commit `b550c01d5` passed temporary boot on
-HyperOS `OS2.0.211.0.VLFCNXM`. KernelSU-Next 3.3.0, all observed vendor
-modules, Wi-Fi, camera, and Android userspace remained operational. A temporary
-cgroup with `pids.max=1` rejected additional forks and incremented
-`pids.events`. No persistent boot slot was written.
+The compatibility profile passed temporary boot on HyperOS
+`OS2.0.211.0.VLFCNXM`. All observed vendor modules, Wi-Fi, camera, and Android
+userspace remained operational. A temporary cgroup with `pids.max=1` rejected
+additional forks and incremented `pids.events`. No persistent boot slot was
+written.
 
 The device-controller compatibility profile follows the same rule: it replaces
 the unmounted legacy v1 freezer controller while retaining cgroup2 freeze.
@@ -87,9 +92,9 @@ From the ACK build root:
 
 ```bash
 HERMETIC_TOOLCHAIN=0 \
-BUILD_CONFIG=common/build.config.gki.aarch64.docker-basic \
-OUT_DIR=/home/dugtx/project_important/Kernel_Build/out/docker-basic \
-DIST_DIR=/home/dugtx/project_important/Kernel_Build/out/docker-basic/dist \
+BUILD_CONFIG=common/build.config.gki.aarch64.docker-network \
+OUT_DIR=/absolute/path/to/out/docker-only \
+DIST_DIR=/absolute/path/to/out/docker-only/dist \
 build/build.sh
 ```
 
@@ -99,3 +104,15 @@ vendor modules.
 
 Boot images must be repacked from the untouched fastboot-ROM `boot.img`, and
 each new round must pass temporary `fastboot boot` validation before flashing.
+
+## Patching the boot image
+
+Normal Magisk or other ramdisk-only boot patching does not disable the Docker
+features compiled into this kernel. The patched image must keep the exact
+kernel `Image` produced by this branch.
+
+Docker support is lost if a patcher or flashing template replaces that
+`Image` with a stock or unrelated kernel. After patching, unpack both boot
+images and compare the kernel payload hashes. Also keep the boot header,
+vendor boot image, device tree, module set, and kernel release compatible with
+the target ROM.
