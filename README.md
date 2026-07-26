@@ -64,7 +64,7 @@ KernelSU-Next 的包检测到 Magisk 或其他非纯净 ramdisk 时会中止，�
 ### Docker 使用说明
 
 Docker 变体提供**内核能力**。`main` 用户可安装独立项目
-[android_docker_runtime_diting](https://github.com/Dugtx/android_docker_runtime_diting)
+[docker-runtime-modle](https://github.com/Dugtx/docker-runtime-modle)
 发布的 KernelSU 模块，获得 Docker Engine、Buildx、Compose、ext4 镜像管理、
 开机服务与 WebUI。模块源码、构建工作流、第三方版本和哈希均在独立项目维护。
 
@@ -204,7 +204,7 @@ working recovery path. See [Flashing and recovery](wiki/Flashing-and-Recovery.md
 
 Docker variants provide the required **kernel capabilities**. Users of `main`
 can install the KernelSU module released by the separate
-[android_docker_runtime_diting](https://github.com/Dugtx/android_docker_runtime_diting)
+[docker-runtime-modle](https://github.com/Dugtx/docker-runtime-modle)
 project to obtain Docker Engine, Buildx, Compose, ext4 image management, an
 autostart service, and a WebUI. Its source, build workflows, third-party pins,
 and checksums are maintained in that project.
