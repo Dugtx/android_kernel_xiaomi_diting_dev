@@ -32,14 +32,37 @@ Kernel derivatives remain subject to GPL-2.0. Additional restrictions such as
 Repository visibility and controlled distribution are operational controls;
 they do not change the obligations attached to a distributed GPL derivative.
 
-## Branch publication / 分支发布
+## Public branch model / 公开分支模型
 
-Push only the reviewed default branch:
+The repository intentionally publishes four long-lived branches:
 
-```text
-main
-```
+| Branch | Public capability set |
+| --- | --- |
+| `main` | KernelSU-Next + Docker |
+| `baseline` | clean ACK/GKI baseline |
+| `docker-only` | Docker kernel capabilities only |
+| `ksun-only` | KernelSU-Next only |
 
-Do not use `git push --all` or `git push --tags` from a development clone.
-Create release tags explicitly after the matching source, ABI report and device
-test report have been accepted.
+These branches are release products, not an unrestricted development dump.
+Push reviewed topic branches explicitly and open a pull request against the
+appropriate base. Do not use `git push --all` or an unqualified
+`git push --tags` from a development clone.
+
+本仓库公开四个长期产品分支，不代表可以上传整个本地开发命名空间。开发分支和
+tag 都应按名称明确推送，并选择正确的 PR 目标分支。
+
+## Release publication / 发布流程
+
+Create a release tag only when all of the following identify the same source:
+
+- branch and source commit;
+- build configuration and toolchain;
+- ABI/KMI comparison;
+- kernel Image digest;
+- package digest and variant name;
+- supported ROM and device boundary;
+- installation and recovery status.
+
+One project version uses one Release page with clearly named variant packages.
+Any untested installer or recovery path must be stated as a Pre-release risk,
+not hidden behind a successful kernel build.

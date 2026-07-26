@@ -1,22 +1,23 @@
 # Redmi K50 Ultra 内核
 
-简体中文 | [English / 中英主页](README.md)
+[项目主页（中英双语）](README.md#简体中文) | [下载](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/releases) | [Wiki](wiki/Home.md)
 
-这是 Redmi K50 Ultra（`diting`，骁龙 8+ Gen 1）的统一公开内核仓库。默认
-`main` 分支为 KernelSU-Next + Docker 完整版本；其他长期分支用于复现与协作。
+这是 Redmi K50 Ultra（`diting`，骁龙 8+ Gen 1）的设备内核项目，提供四个长期
+维护的版本：
 
-| 分支 | KernelSU-Next | Docker 内核能力 | 用途 |
-| --- | --- | --- | --- |
-| [`main`](../../tree/main) | 是 | 是 | 推荐完整版本 |
-| [`baseline`](../../tree/baseline) | 否 | 否 | 纯净 ACK/GKI 对照基线 |
-| [`docker-only`](../../tree/docker-only) | 否 | 是 | 与其他 Root 方案组合的高级用途 |
-| [`ksun-only`](../../tree/ksun-only) | 是 | 否 | 只需要内核 Root 的用户 |
+| 分支 | 能力 | 用途 |
+| --- | --- | --- |
+| `main` | KernelSU-Next + Docker | 推荐完整版本 |
+| `ksun-only` | KernelSU-Next | 只需要内核 Root |
+| `docker-only` | Docker 内核能力 | 配合独立 Root 方案 |
+| `baseline` | 纯净 ACK/GKI 基线 | 开发、比较和故障排查 |
 
-项目基于 Google Build `14313284` 对应的 ACK/GKI 5.10，并保持 HyperOS
-`OS2.0.211.0.VLFCNXM` 所需的小米厂商模块 ABI。当前只对这一款 ROM 完成适配
-和真机验收；未承诺兼容其他 HyperOS 或类原生 ROM。
+当前只支持 HyperOS `OS2.0.211.0.VLFCNXM`。Docker 使用的“空槽位”是内核
+cgroup/KABI 结构槽位，不是手机 A/B 启动槽，也不表示兼容其他 ROM。
 
-Docker 相关状态复用的是未启用的 cgroup 槽位和 Android KABI 预留槽位，不是
-手机 A/B 启动槽。公开分支不包含 SUSFS 或定位实验代码。
+安装包使用 AnyKernel3，只替换活动 boot 槽中的内核 `Image` 并保留 ramdisk。
+安装前必须备份匹配 ROM 的原厂 `boot.img`，保持 Bootloader 解锁并准备 Fastboot
+恢复路径。
 
-完整的能力、编译、发布、安全与协议说明请阅读项目主页 [README.md](README.md)。
+完整的选包、安装、Docker 用户态、源码编译、KMI 约束和贡献说明请阅读
+[README.md](README.md#简体中文)。

@@ -1,53 +1,55 @@
-# Build and validation / 编译与验收
+# Building and KMI checks / 源码编译与 KMI 检查
 
-## 1. Fixed inputs / 固定输入
+This repository is the `common` kernel checkout, not a standalone compiler
+SDK. Build it inside the matching ACK Build `14313284` workspace. Mixing a
+newer compiler, another ACK tag, or artifacts from a different branch can
+produce output that compiles but cannot load Xiaomi vendor modules.
 
-Use all of the following together:
+本仓库只包含 `common` 内核源码，不是独立的编译 SDK。必须放入匹配的 ACK Build
+`14313284` 工作区；不要混用其他 ACK、较新编译器或不同变体的构建产物。
 
-- source base `android12-5.10-2025-05_r6`
-- ACK base commit `fb24cf99ad973cd4c7c7fa375c6053f939ef3a89`
-- Google build number `14313284`
-- Clang/LLD `r416183b` (`12.0.5`)
-- the branch's pinned `.scmversion`
-- the exact KernelSU-Next submodule revision on KSUN branches
+## Fixed inputs / 固定输入
 
-不要把较新的 Clang、任意 ACK 分支或不同 KernelSU 提交混合进一次发布构建。
+- ACK tag: `android12-5.10-2025-05_r6`
+- ACK base: `fb24cf99ad973cd4c7c7fa375c6053f939ef3a89`
+- Google build number: `14313284`
+- Clang/LLD: `r416183b` (`12.0.5`)
+- kernel release: `5.10.236-android12-9-00003-gfb24cf99ad97-ab14313284`
+- the selected branch's `.scmversion`
+- the exact KernelSU-Next submodule revision on KernelSU branches
 
-## 2. Expected layout / 目录结构
-
-The kernel checkout is named `common` beside the ACK build tools:
+## Workspace layout / 工作区结构
 
 ```text
 ack-build/
 ├── build/
-├── common/                 # this repository
+├── common/                 # this repository / 本仓库
 ├── prebuilts/
 └── prebuilts-master/
 ```
 
-Initialize the submodule when the selected branch contains it:
+Initialize submodules after switching to `main` or `ksun-only`:
 
 ```bash
 git submodule update --init --recursive
+git -C KernelSU-Next rev-parse HEAD
 ```
 
-## 3. Clean branch builds / 分支编译
+## Branch profiles / 分支配置
 
-Use a new output directory for every branch and commit.
+| Branch | Build config | KernelSU-Next | Docker additions |
+| --- | --- | --- | --- |
+| `main` | `build.config.gki.aarch64.docker-network` | yes | yes |
+| `docker-only` | `build.config.gki.aarch64.docker-network` | no | yes |
+| `ksun-only` | `build.config.gki.aarch64` | yes | no |
+| `baseline` | `build.config.gki.aarch64` | no | no |
 
-Baseline or KSUN-only:
+Use a new `OUT_DIR` and `DIST_DIR` for every branch and commit.
+每个分支和提交都应使用新的输出目录。
 
-```bash
-HERMETIC_TOOLCHAIN=0 \
-BUILD_NUMBER=14313284 \
-KERNEL_DIR=common \
-BUILD_CONFIG=common/build.config.gki.aarch64 \
-OUT_DIR="$PWD/out/diting-$(git -C common rev-parse --short HEAD)" \
-DIST_DIR="$PWD/out/diting-$(git -C common rev-parse --short HEAD)/dist" \
-build/build.sh -j"$(nproc)"
-```
+## Build / 编译
 
-KSUN plus Docker:
+Example for `main` or `docker-only`:
 
 ```bash
 HERMETIC_TOOLCHAIN=0 \
@@ -59,17 +61,32 @@ DIST_DIR="$PWD/out/diting-docker-$(git -C common rev-parse --short HEAD)/dist" \
 build/build.sh -j"$(nproc)"
 ```
 
-## 4. Required gates / 必须通过的门禁
+Example for `baseline` or `ksun-only`:
 
-Check the embedded kernel release:
+```bash
+HERMETIC_TOOLCHAIN=0 \
+BUILD_NUMBER=14313284 \
+KERNEL_DIR=common \
+BUILD_CONFIG=common/build.config.gki.aarch64 \
+OUT_DIR="$PWD/out/diting-$(git -C common rev-parse --short HEAD)" \
+DIST_DIR="$PWD/out/diting-$(git -C common rev-parse --short HEAD)/dist" \
+build/build.sh -j"$(nproc)"
+```
+
+Do not override the branch's vendor-compatible release identity.
+不要覆盖分支中与厂商模块兼容的内核 release 标识。
+
+## KMI compatibility gates / KMI 兼容门禁
+
+First verify the embedded release:
 
 ```bash
 strings "$DIST_DIR/Image" |
   grep -m1 '^Linux version 5.10.236-android12-9-00003-gfb24cf99ad97-ab14313284'
 ```
 
-For every feature branch, compare these files byte-for-byte with the accepted
-baseline build:
+Every feature build must be compared byte-for-byte with a clean build of the
+`baseline` branch made from the same workspace:
 
 ```bash
 cmp baseline/dist/vmlinux.symvers "$DIST_DIR/vmlinux.symvers"
@@ -77,21 +94,24 @@ cmp baseline/dist/abi.xml "$DIST_DIR/abi.xml"
 cmp baseline/dist/abi_symbollist "$DIST_DIR/abi_symbollist"
 ```
 
-Any difference must be investigated before boot testing. Disabling KMI
-trimming is not a substitute for preserving Xiaomi vendor-module compatibility.
+An unexpected difference stops the release process. Investigate configuration,
+genksyms input, exported symbols, and structure layout before booting the
+output. Disabling KMI trimming or strict symbol-list checks is not a fix.
 
-Also record:
+任何非预期差异都会阻止发布。应先检查配置、genksyms 输入、导出符号和结构布局，
+不能通过关闭 trimming 或严格 symbol-list 检查继续。
+
+Record the build artifacts:
 
 ```bash
 sha256sum "$DIST_DIR"/{Image,Image.lz4,vmlinux.symvers,abi.xml,abi_symbollist}
 ```
 
-Kernel binaries include a build timestamp unless the builder explicitly fixes
-all Kbuild timestamp inputs. Therefore two otherwise equivalent builds may
-have different `Image` hashes; ABI/KMI artifacts and the embedded release are
-the compatibility gates used by this project.
+An `Image` may include a build timestamp. ABI/KMI artifacts, the embedded
+release, and the source revision are the compatibility identity; a changing
+Image hash still requires explanation.
 
-## 5. Configuration checks / 配置检查
+## Configuration checks / 配置检查
 
 ```bash
 grep '^CONFIG_KSU=' "$OUT_DIR/common/.config"
@@ -99,18 +119,17 @@ grep -E '^(CONFIG_(PID_NS|USER_NS|IPC_NS|SYSVIPC|CGROUP_PIDS|CGROUP_DEVICE|CFS_B
   "$OUT_DIR/common/.config"
 ```
 
-The actual output subdirectory follows `KERNEL_DIR`; adjust the path if the
-checkout has another name.
+Confirm that the selected branch contains only its intended capability set.
+`docker-only` must not gain KernelSU, and `ksun-only` must not gain the Docker
+profile.
 
-## 6. Accepted `main` candidate / 已验收的 `main` 候选
+## Before a pull request / 提交 PR 前
 
-- source tag: `diting-ksun-docker-v1.0.0-rc1`
-- tested source: `059228c8c44bfdd7808467b3db78e8e991ec359e`
-- Image SHA-256: `1ceaf31279cd31f155609e270031f52cda2341cfe17253c4e5f40b70bbb70515`
-- boot method: temporary `fastboot boot`, not persistent flash
-- reference ROM: `OS2.0.211.0.VLFCNXM`
+- run `git diff --check`;
+- include the build profile and source revision;
+- report all three ABI/KMI comparisons;
+- describe any new Kconfig dependency or KABI adapter;
+- keep boot images, modules, logs, and local paths outside Git.
 
-Android completed boot with SELinux Enforcing. KernelSU root and the Xiaomi
-QRTR, Wi-Fi, display, camera, and audio module paths remained operational.
-Docker test counts and the external Docker Hub limitation are recorded in
-[Docker and KernelSU](Docker-and-KernelSU.md).
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for branch selection and the full
+submission checklist.
