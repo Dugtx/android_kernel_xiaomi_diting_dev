@@ -4,12 +4,12 @@ KernelSU-Next and Docker solve different parts of the system. KernelSU-Next
 provides controlled root access. The Docker profile provides kernel features
 for containers. Docker Engine, storage, networking policy, and startup remain
 userspace responsibilities, implemented for `main` by the separately maintained
-[docker-runtime-modle](https://github.com/Dugtx/docker-runtime-modle)
+[docker-runtime-ksu-modle](https://github.com/Dugtx/docker-runtime-ksu-modle)
 KernelSU module.
 
 KernelSU-Next 与 Docker 负责不同层次：前者提供可控 Root，后者需要内核容器能力。
 Docker Engine、镜像存储、网络策略和开机服务仍属于用户态；`main` 用户可安装
-[docker-runtime-modle](https://github.com/Dugtx/docker-runtime-modle)
+[docker-runtime-ksu-modle](https://github.com/Dugtx/docker-runtime-ksu-modle)
 独立 KernelSU 模块实现这些能力。
 
 ## KernelSU-Next
@@ -55,7 +55,7 @@ slots are not phone A/B boot slots.
 
 Installing a Docker kernel alone does not install a `docker` command. Users of
 `main` can install the module released by
-[docker-runtime-modle](https://github.com/Dugtx/docker-runtime-modle),
+[docker-runtime-ksu-modle](https://github.com/Dugtx/docker-runtime-ksu-modle),
 which provides:
 
 - AArch64 Docker client, `dockerd`, containerd, runc, and optional plugins;
@@ -127,4 +127,4 @@ The public Docker kernel and module do not provide:
 Kernel test coverage belongs to this repository's
 [GitHub Releases](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/releases).
 Runtime versions, packages, and runtime-specific issues belong to the
-[module repository](https://github.com/Dugtx/docker-runtime-modle).
+[module repository](https://github.com/Dugtx/docker-runtime-ksu-modle).
