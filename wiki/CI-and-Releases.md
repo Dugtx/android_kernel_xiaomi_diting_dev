@@ -57,6 +57,15 @@ It then checks the fixed kernel release string and variant-specific Kconfig
 boundaries before uploading the Image and KMI evidence. This is intentionally
 manual because a target plus baseline build is storage- and CPU-intensive.
 
+The hosted runner provisions swap and limits Make to two jobs because the
+ThinLTO link can exceed the runner's physical memory. This resource guard does
+not change the kernel source, configuration, or KMI checks.
+
+随后，工作流会检查固定的内核版本字符串与各变体的 Kconfig 边界，再上传 Image
+及 KMI 证据。目标变体与 baseline 的双重编译会消耗较多存储与 CPU，因此该工作流
+默认手动触发。公共 runner 会预先配置 swap，并将 Make 并发限制为 2，以避免
+ThinLTO 链接超过物理内存；该资源保护不修改内核源码、配置或 KMI 门禁。
+
 ## Publishing the module / 发布模块
 
 Push a signed tag matching the module version, for example:

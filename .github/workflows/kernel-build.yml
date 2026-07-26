@@ -25,6 +25,8 @@ jobs:
   build-and-kmi:
     runs-on: ubuntu-24.04
     timeout-minutes: 180
+    env:
+      BUILD_JOBS: 2
     steps:
       - name: Check out workflow metadata
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -92,6 +94,15 @@ jobs:
             --version | tee "$RUNNER_TEMP/clang-version.txt"
           grep -q '12.0.5' "$RUNNER_TEMP/clang-version.txt"
 
+      - name: Provision memory for ThinLTO
+        run: |
+          sudo fallocate -l 16G /swapfile
+          sudo chmod 0600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
+          df -h "$RUNNER_TEMP"
+
       - name: Build selected variant
         env:
           BUILD_CONFIG: ${{ steps.profile.outputs.config }}
@@ -104,7 +115,7 @@ jobs:
           BUILD_CONFIG="$BUILD_CONFIG" \
           OUT_DIR="$RUNNER_TEMP/target-out" \
           DIST_DIR="$RUNNER_TEMP/target-dist" \
-            build/build.sh -j"$(nproc)"
+            build/build.sh -j"$BUILD_JOBS"
 
       - name: Build clean baseline for KMI comparison
         if: ${{ inputs.variant != 'baseline' }}
@@ -118,7 +129,7 @@ jobs:
           BUILD_CONFIG=common/build.config.gki.aarch64 \
           OUT_DIR="$RUNNER_TEMP/baseline-out" \
           DIST_DIR="$RUNNER_TEMP/baseline-dist" \
-            build/build.sh -j"$(nproc)"
+            build/build.sh -j"$BUILD_JOBS"
 
       - name: Enforce release identity and KMI contract
         env:
