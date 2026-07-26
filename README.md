@@ -1,10 +1,6 @@
-<a id="top"></a>
-
 # Redmi K50 Ultra 内核 / Kernel — 纯净基线 / Baseline
 
 [简体中文](#简体中文) | [English](#english)
-
-<a id="简体中文"></a>
 
 ## 简体中文
 
@@ -56,11 +52,7 @@ SPDX 条款。详情见 [COPYING](COPYING)、[第三方来源](THIRD_PARTY.md)�
 
 维护者：Dugtx。上游贡献者保留其对应代码的作者身份。
 
-[返回语言选择](#top)
-
 ---
-
-<a id="english"></a>
 
 ## English
 
@@ -116,5 +108,3 @@ tree. See [COPYING](COPYING), [third-party provenance](THIRD_PARTY.md) and the
 [original ACK guide](README.upstream.md).
 
 Maintainer: Dugtx. Upstream contributors retain authorship of their work.
-
-[Back to language selection](#top)
