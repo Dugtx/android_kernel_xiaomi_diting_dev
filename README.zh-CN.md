@@ -6,6 +6,12 @@
 基于 Google Build `14313284` 对应的 ACK/GKI 5.10，并保持 HyperOS
 `OS2.0.211.0.VLFCNXM` 所需的小米厂商模块 ABI。
 
+> **兼容性说明：** KernelSU-Next 的功能机制不依赖某一款 ROM；该 KSUN-only
+> 变体也不包含 Docker 分支的 cgroup/KABI 空槽位兼容层。但本仓库发布的内核
+> `Image` 固定于 Build `14313284` 的 5.10 KMI、内核 release 和小米 vendor
+> 模块接口，目前只在 HyperOS `OS2.0.211.0.VLFCNXM` 完成真机验收。复用相同
+> vendor/boot ABI 的其他 ROM 可能可用，但未经验证，不能标记为通用刷机包。
+
 该版本只包含 KernelSU-Next，明确不包含 SUSFS、Docker 配置、管理器 APK、boot
 镜像或小米闭源文件。
 
