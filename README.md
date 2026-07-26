@@ -2,6 +2,8 @@
 
 [简体中文](#简体中文) | [English](#english)
 
+[下载 / Downloads](https://github.com/Dugtx/android_kernel_xiaomi_diting_ksun_docker/releases)
+
 ## 简体中文
 
 这是面向 Redmi K50 Ultra（`diting`，骁龙 8+ Gen 1）日常使用的内核，将
