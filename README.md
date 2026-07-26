@@ -1,6 +1,6 @@
 # Redmi K50 Ultra 内核 / Kernel
 
-[简体中文](#简体中文) | [English](#english) | [下载 / Downloads](https://github.com/Dugtx/android_kernel_xiaomi_diting/releases)
+[简体中文](#简体中文) | [English](#english) | [下载 / Downloads](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/releases)
 
 ## 简体中文
 
