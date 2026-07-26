@@ -121,6 +121,7 @@ if [ "$DOWNLOAD" = 1 ]; then
     download_file \
         "https://github.com/docker/compose/releases/download/v$COMPOSE_VERSION/docker-compose-linux-aarch64" \
         "$WORK_DIR/plugins/docker-compose" "$COMPOSE_SHA256"
+    chmod 0755 "$WORK_DIR/plugins/docker-buildx" "$WORK_DIR/plugins/docker-compose"
     PLUGIN_DIR="$WORK_DIR/plugins"
 fi
 
