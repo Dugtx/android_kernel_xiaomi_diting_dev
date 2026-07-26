@@ -2,8 +2,7 @@
 
 ## KernelSU-Next
 
-`release/ksun-only`, `release/ksun-docker` and `main` pin
-KernelSU-Next `v3.3.0` as a Git submodule. The manager application is not
+This repository's `main` pins KernelSU-Next `v3.3.0` as a Git submodule. The manager application is not
 embedded in the boot ramdisk or distributed in this repository.
 
 The source is built in GKI mode. Root authorization remains a userspace policy

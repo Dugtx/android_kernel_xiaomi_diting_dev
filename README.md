@@ -1,83 +1,75 @@
-# Redmi K50 Ultra Kernel
+# Redmi K50 Ultra Kernel — KernelSU-Next + Docker
 
 [简体中文](README.zh-CN.md) | English
 
-Device-focused Android kernel development for the Redmi K50 Ultra
-(`diting`, Snapdragon 8+ Gen 1). The project starts from the Android Common
-Kernel 5.10 source used by Google build `14313284` and preserves the Xiaomi
+Daily-use kernel for the Redmi K50 Ultra (`diting`, Snapdragon 8+ Gen 1),
+combining KernelSU-Next v3.3.0 with the validated Docker kernel profile. It is
+based on ACK/GKI 5.10 from Google Build `14313284` and preserves the Xiaomi
 vendor-module ABI required by HyperOS `OS2.0.211.0.VLFCNXM`.
 
-The repository is intentionally limited to three reproducible source lines:
+SUSFS and unpublished experimental features are not present in this
+repository.
 
-| Branch | Purpose |
-| --- | --- |
-| `baseline/ack-14313284` | Clean ACK source snapshot and Xiaomi-compatible release identity |
-| `release/ksun-only` | Baseline plus KernelSU-Next v3.3.0 |
-| `release/ksun-docker` | KernelSU-Next plus the validated container kernel profile |
-| `main` | Documentation and the current `release/ksun-docker` source |
+## Capabilities
 
-## Project scope
+- KernelSU-Next kernel root support;
+- PID, IPC and user namespaces;
+- PIDS and DEVICE cgroup controllers;
+- CPU shares, CFS bandwidth and block-I/O throttling;
+- OverlayFS and container filesystem requirements;
+- veth, bridge netfilter, conntrack, NAT and MASQUERADE;
+- packet, Unix socket and netlink diagnostics.
 
-The Docker profile adds the namespaces, cgroup controllers, IPC, bridge
-firewalling, CFS bandwidth control, block-I/O throttling and network drivers
-needed for practical containers. KABI compatibility shims keep Xiaomi's
-out-of-tree vendor modules usable while these features are enabled.
+Xiaomi-sensitive structure changes use guarded KABI compatibility
+implementations. The validated source revision is:
 
-This public tree does **not** contain:
+```text
+059228c8c44bfdd7808467b3db78e8e991ec359e
+```
 
-- Xiaomi firmware, ROM files, boot images or proprietary vendor modules
-- KernelSU manager APKs or container runtime binaries
-- unpublished experimental feature branches
-- development-machine filesystem, file-sharing, USB-peripheral or TCP-tuning
-  extensions
+Its `vmlinux.symvers`, `abi.xml` and `abi_symbollist` were byte-identical to
+the clean baseline. Temporary device boot passed with SELinux Enforcing,
+KernelSU root, Xiaomi QRTR transports, Wi-Fi, camera and audio operational.
 
 ## Build
-
-Use the exact ACK build `14313284` environment and Clang `r416183b`. From a
-build root where this repository is checked out as `common`:
 
 ```bash
 git submodule update --init --recursive
 
 HERMETIC_TOOLCHAIN=0 \
-BUILD_NUMBER=14313284 \
-KERNEL_DIR=common \
 BUILD_CONFIG=common/build.config.gki.aarch64.docker-network \
 OUT_DIR="$PWD/out/diting-ksun-docker" \
 DIST_DIR="$PWD/out/diting-ksun-docker/dist" \
 build/build.sh -j"$(nproc)"
 ```
 
-Use `common/build.config.gki.aarch64` for the baseline and KSUN-only branches.
-The embedded release must be:
+Build in the matching ACK Build `14313284` workspace with Clang `r416183b`.
+Do not replace the pinned KernelSU-Next submodule or override the
+vendor-compatible kernel release.
 
-```text
-5.10.236-android12-9-00003-gfb24cf99ad97-ab14313284
-```
+## Device and runtime boundary
 
-See [Build and validation](wiki/Build-and-Validation.md) before packaging or
-testing any result.
+The repository supplies kernel source only. It does not distribute manager
+APKs, Docker userspace binaries, ROMs, firmware, proprietary modules or boot
+images. Repack from an untouched stock `boot.img` and use `fastboot boot`
+before persistent flashing.
 
-## Safety
-
-The target uses A/B boot slots, Android Verified Boot and proprietary
-Xiaomi modules. Test a newly repacked image with `fastboot boot` first. Never
-lock the bootloader with a modified image, and keep a verified stock
-`boot.img` available for recovery.
+Android networking requires runtime policy-routing rules for Docker bridge
+traffic; that policy belongs in the userspace deployment, not the kernel.
 
 ## Documentation
 
-- [Project wiki](wiki/Home.md)
+- [Build and validation](wiki/Build-and-Validation.md)
 - [Architecture and KMI](wiki/Architecture-and-KMI.md)
-- [KernelSU and Docker profile](wiki/Docker-and-KernelSU.md)
+- [Docker and KernelSU](wiki/Docker-and-KernelSU.md)
 - [Flashing and recovery](wiki/Flashing-and-Recovery.md)
 - [Third-party components](THIRD_PARTY.md)
-- [Original ACK patch guide](README.upstream.md)
+- [Original ACK guide](README.upstream.md)
 
 ## License and credits
 
-The Linux kernel source and project kernel modifications are distributed under
-GPL-2.0-only; syscall UAPI exceptions remain as declared by the upstream tree.
-See [COPYING](COPYING) and the SPDX identifiers in individual files.
+Kernel sources, project modifications and the KernelSU-Next kernel component
+use GPL-2.0-only and compatible per-file SPDX terms. See [COPYING](COPYING),
+[AUTHORS.md](AUTHORS.md) and [THIRD_PARTY.md](THIRD_PARTY.md).
 
-Project maintainer: **Dugtx**. See [AUTHORS.md](AUTHORS.md) for attribution.
+Maintainer: Dugtx. Upstream contributors retain authorship of their work.

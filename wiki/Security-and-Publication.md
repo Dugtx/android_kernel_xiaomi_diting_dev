@@ -34,12 +34,9 @@ they do not change the obligations attached to a distributed GPL derivative.
 
 ## Branch publication / 分支发布
 
-Push only the reviewed refs:
+Push only the reviewed default branch:
 
 ```text
-baseline/ack-14313284
-release/ksun-only
-release/ksun-docker
 main
 ```
 
