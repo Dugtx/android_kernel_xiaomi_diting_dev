@@ -1,84 +1,126 @@
 # Redmi K50 Ultra 内核 / Kernel
 
-[简体中文](#简体中文) | [English](#english) | [下载 / Downloads](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/releases)
+[简体中文](#简体中文) | [English](#english) | [下载 / Downloads](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/releases) | [Wiki](wiki/Home.md)
 
 ## 简体中文
 
-这是面向 Redmi K50 Ultra（`diting`，骁龙 8+ Gen 1）的统一内核源码仓库。
-项目基于 Google Build `14313284` 对应的 ACK/GKI 5.10，并保持 HyperOS
-`OS2.0.211.0.VLFCNXM` 所需的小米厂商模块 ABI。
+这是面向 Redmi K50 Ultra（`diting`，骁龙 8+ Gen 1）的设备内核项目。它基于
+Google ACK/GKI 5.10，为 HyperOS 保留小米厂商模块所需的内核 ABI，并提供可选的
+KernelSU-Next 内核 Root 和 Docker/通用 Linux 内核能力。
 
-默认 `main` 分支组合 KernelSU-Next v3.3.0 与经过验收的 Docker 内核能力。
-纯净基线和单功能版本保留为长期分支，便于协作、比较和独立构建：
+### 主要能力
 
-| 分支 | KernelSU-Next | Docker 内核能力 | 用途 |
+- KernelSU-Next 内核 Root，可由管理器在用户态控制授权；
+- Docker 所需的命名空间、IPC、cgroup、OverlayFS、veth、网桥、NAT 和诊断接口；
+- 内存、CPU、PIDS、DEVICE 和块 I/O 等资源控制基础；
+- IPv6 NAT、macvlan、VXLAN 等容器网络能力；
+- 保持 SELinux Enforcing，不以关闭 KMI 检查换取功能。
+
+公开源码不包含 SUSFS、定位实验、管理器 APK、小米闭源模块或 Docker 用户态
+二进制。
+
+### 选择版本
+
+所有版本都在同一个 [GitHub Release](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/releases)
+页面发布。请按用途选择，不要在不同变体之间混用 `Image`。
+
+| 版本 | 源码分支 | 适合谁 | 安装包名称 |
 | --- | --- | --- | --- |
-| [`main`](../../tree/main) | 是 | 是 | 推荐完整版本 |
-| [`baseline`](../../tree/baseline) | 否 | 否 | 纯净 ACK/GKI 对照基线 |
-| [`docker-only`](../../tree/docker-only) | 否 | 是 | 与其他 Root 方案组合的高级用途 |
-| [`ksun-only`](../../tree/ksun-only) | 是 | 否 | 只需要内核 Root 的用户 |
+| KernelSU-Next + Docker | [`main`](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/tree/main) | 希望同时获得内核 Root 和容器能力的用户 | `*KernelSU-Next-Docker*.zip` |
+| KernelSU-Next | [`ksun-only`](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/tree/ksun-only) | 只需要内核 Root，不运行 Docker | `*KernelSU-Next*.zip`，不含 `Docker` |
+| Docker | [`docker-only`](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/tree/docker-only) | 已有兼容 Root 方案、只需要容器能力的高级用户 | `*Docker*.zip`，不含 `KernelSU-Next` |
+| Baseline | [`baseline`](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/tree/baseline) | 内核开发、对照和故障排查 | `*Baseline*.zip` |
 
-> **兼容性边界：** 当前只针对 HyperOS `OS2.0.211.0.VLFCNXM` 完成适配和
-> 真机验收。Docker 相关的 PIDS、DEVICE 等增量状态复用原内核未启用的
-> cgroup 槽位和 Android KABI 预留槽位，以避免扩大冻结结构。这里的“空槽位”
-> 不是手机 A/B 启动槽，也不表示兼容其他 ROM。
+### 兼容性与风险
 
-公开分支均不包含 SUSFS 或定位实验代码。
+> **目前唯一支持的系统是 Redmi K50 Ultra 的 HyperOS
+> `OS2.0.211.0.VLFCNXM`（Android 15）。** 其他 HyperOS、官改或类原生 ROM
+> 即使能够启动，也不属于支持范围。
 
-### `main` 分支能力
+Docker 增量状态复用未启用的 cgroup 成员和 Android KABI 预留字段，以保持当前
+厂商模块所依赖的结构布局。这里的“空槽位”是内核结构/KABI 槽位，**不是**手机
+的 A/B 启动槽，也不代表内核能够跨 ROM 通用。
 
-- KernelSU-Next 内核 Root；
-- PID、IPC 和用户命名空间；
-- PIDS 与 DEVICE cgroup 控制器；
-- CPU shares、CFS 带宽及块 I/O 限速；
-- OverlayFS 与容器文件系统依赖；
-- veth、网桥 netfilter、连接跟踪、NAT 和 MASQUERADE；
-- packet、Unix socket 和 netlink 诊断接口。
+刷写内核始终存在无法开机、模块不兼容或数据不可访问的风险。必须保留与当前
+ROM 完全匹配的原厂 `boot.img`、解锁的 Bootloader 和可用的 Fastboot 恢复路径。
+不要在安装修改后的启动组件时重新锁定 Bootloader。
 
-会改变小米敏感结构布局的功能使用受保护的 KABI 兼容实现。已验收内核源码
-版本的 `vmlinux.symvers`、`abi.xml` 和 `abi_symbollist` 与纯净基线逐字节一致。
-临时设备启动通过，SELinux Enforcing、KernelSU Root、小米 QRTR、Wi-Fi、相机、
-音频及 Docker 核心能力正常。
+### 快速安装
 
-统一仓库的 `main` 候选还完成了 Docker 28.5.2 全量真机回归：默认 cgroup v2
-核心、bridge/host 网络、DNS、HTTP、私有 cgroup v1 资源限制、Buildx、Compose、
-IPv6 NAT、macvlan 与 VXLAN 均通过。BFQ 权重因 Moby 用户态不识别而标记为
-SKIP，但 blkio 读限速已生效。详细计数见发布说明和
-[Docker 与 KernelSU](wiki/Docker-and-KernelSU.md)。
+1. 确认设备代号为 `diting`，系统版本为 `OS2.0.211.0.VLFCNXM`，Bootloader
+   已解锁。
+2. 从 [Releases](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/releases)
+   下载所需 ZIP，并用同页 `SHA256SUMS` 校验文件。
+3. 备份当前活动槽对应的原厂 `boot.img`。
+4. 使用支持 AnyKernel3 的内核刷写工具或 Recovery 安装 ZIP。
+5. 首次启动后检查 Android、网络、相机、音频、电话和 Root/容器功能；发现异常
+   立即从 Fastboot 恢复原厂 `boot.img`。
 
-### 编译
+AnyKernel3 包只替换活动 boot 槽中的内核 `Image`，保留现有 ramdisk。带
+KernelSU-Next 的包检测到 Magisk 或其他非纯净 ramdisk 时会中止，以避免双 Root。
+`v1.0.0-rc1` 的 AnyKernel3 安装与恢复流程尚未完成一次公开的真机演练，因此它
+仍是面向有恢复能力用户的 Pre-release。详细步骤见[安装与恢复](wiki/Flashing-and-Recovery.md)。
+
+### Docker 使用说明
+
+Docker 变体提供的是**内核能力**，不会自动安装 `docker`、`dockerd`、镜像存储
+或开机服务。Docker 用户态运行时需要单独部署。
+
+日用建议保持 Android 原有布局，使用 cgroup v2 和隔离网络；需要内存、CPU、
+devices、blkio 等完整资源限制时，再使用 Docker 私有挂载命名空间中的 cgroup
+v1。Bridge 网络还需要用户态根据当前 Wi-Fi、移动数据或 VPN 动态设置策略路由。
+参见 [KernelSU 与 Docker](wiki/Docker-and-KernelSU.md)。
+
+### 从源码编译
+
+将本仓库检出为 ACK Build `14313284` 工作区中的 `common`，使用 Clang/LLD
+`r416183b`。KernelSU 分支还需要初始化固定的子模块：
 
 ```bash
 git submodule update --init --recursive
 
 HERMETIC_TOOLCHAIN=0 \
+BUILD_NUMBER=14313284 \
+KERNEL_DIR=common \
 BUILD_CONFIG=common/build.config.gki.aarch64.docker-network \
 OUT_DIR="$PWD/out/diting-main" \
 DIST_DIR="$PWD/out/diting-main/dist" \
 build/build.sh -j"$(nproc)"
 ```
 
-使用匹配的 ACK Build `14313284` 工作区和 Clang `r416183b`。切换到其他长期
-分支后，应使用该分支 README 指定的构建配置。不要覆盖厂商兼容的内核 release。
+`main` 和 `docker-only` 使用 `build.config.gki.aarch64.docker-network`；
+`baseline` 和 `ksun-only` 使用 `build.config.gki.aarch64`。完整目录结构和检查命令
+见[源码编译与 KMI 检查](wiki/Build-and-Validation.md)。
 
-### 发布方式
+### KMI 硬约束
 
-一个版本使用一张 GitHub Release 页面，提供四个明确命名的 AnyKernel3 包。
-每个包在发布清单中记录对应源码分支、源码 tag、提交和 SHA-256；不能在不同
-变体之间混用内核镜像或根据 ZIP 名称猜测功能。
+小米的显示、相机、音频、网络和 QRTR 等驱动主要来自 vendor 模块。一个能够
+编译成功的内核仍可能因符号 CRC、`vermagic` 或冻结结构布局变化而卡在开机动画。
+所有功能改动都必须保持目标 ROM 所需的：
 
-### 设备与运行时边界
+- `UTS_RELEASE` 与模块 `vermagic`；
+- 导出的 KMI 符号集合及其 CRC；
+- 厂商模块使用的敏感结构布局；
+- 严格 KMI symbol-list 与 trimming 检查。
 
-只能从匹配目标 ROM 的纯净原厂 `boot.img` 重打包，并在持久刷写前使用
-`fastboot boot` 临时测试。Android 上 Docker bridge 所需的动态策略路由属于
-用户态运行模块，不应固化进内核。
+不得用关闭 `TRIM_NONLISTED_KMI` 或严格模式掩盖兼容性问题。详细设计见
+[架构与 KMI](wiki/Architecture-and-KMI.md)。
+
+### 参与贡献
+
+四个长期分支代表不同的发布产品，不是等待合并到 `main` 的临时功能分支。
+提交前请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)，选择正确的目标分支，并附上
+构建配置、ABI/KMI 比较和适用范围。不要提交 boot 镜像、ROM、APK、厂商模块、
+设备日志或凭据。
 
 ### 文档与协议
 
-- [编译与验收](wiki/Build-and-Validation.md)
+- [Wiki 导航](wiki/Home.md)
+- [安装与恢复](wiki/Flashing-and-Recovery.md)
+- [源码编译与 KMI 检查](wiki/Build-and-Validation.md)
 - [架构与 KMI](wiki/Architecture-and-KMI.md)
-- [Docker 与 KernelSU](wiki/Docker-and-KernelSU.md)
-- [刷写与恢复](wiki/Flashing-and-Recovery.md)
+- [KernelSU 与 Docker](wiki/Docker-and-KernelSU.md)
+- [安全与发布](wiki/Security-and-Publication.md)
 - [第三方组件](THIRD_PARTY.md)
 - [原始 ACK 指南](README.upstream.md)
 
@@ -89,92 +131,139 @@ SPDX 条款。维护者：Dugtx；上游贡献者保留其对应代码的作者�
 
 ## English
 
-Unified kernel source repository for the Redmi K50 Ultra (`diting`, Snapdragon
-8+ Gen 1). It is based on ACK/GKI 5.10 from Google Build `14313284` and
-preserves the Xiaomi vendor-module ABI required by HyperOS
-`OS2.0.211.0.VLFCNXM`.
+Device kernel project for the Redmi K50 Ultra (`diting`, Snapdragon 8+ Gen 1).
+It is based on Google ACK/GKI 5.10, preserves the kernel ABI required by
+Xiaomi vendor modules on HyperOS, and provides optional KernelSU-Next root and
+Docker/general-purpose Linux kernel capabilities.
 
-The default `main` branch combines KernelSU-Next v3.3.0 with the validated
-Docker kernel capabilities. Long-lived baseline and single-feature branches
-remain available for collaboration, comparison and independent builds:
+### Highlights
 
-| Branch | KernelSU-Next | Docker kernel support | Purpose |
+- KernelSU-Next kernel root with userspace authorization control;
+- namespaces, IPC, cgroups, OverlayFS, veth, bridges, NAT, and diagnostics for Docker;
+- memory, CPU, PIDS, DEVICE, and block-I/O resource-control foundations;
+- IPv6 NAT, macvlan, and VXLAN container networking;
+- SELinux Enforcing without bypassing strict KMI checks.
+
+Public source contains no SUSFS, location experiments, manager APKs,
+proprietary Xiaomi modules, or Docker userspace binaries.
+
+### Choose a variant
+
+All variants are published on one [GitHub Releases](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/releases)
+page. Do not mix kernel Images between variants.
+
+| Variant | Source branch | Intended use | Package name |
 | --- | --- | --- | --- |
-| [`main`](../../tree/main) | Yes | Yes | Recommended complete variant |
-| [`baseline`](../../tree/baseline) | No | No | Clean ACK/GKI reference |
-| [`docker-only`](../../tree/docker-only) | No | Yes | Advanced use with a separate root solution |
-| [`ksun-only`](../../tree/ksun-only) | Yes | No | Kernel root without Docker additions |
+| KernelSU-Next + Docker | [`main`](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/tree/main) | Kernel root and container support | `*KernelSU-Next-Docker*.zip` |
+| KernelSU-Next | [`ksun-only`](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/tree/ksun-only) | Kernel root without Docker additions | `*KernelSU-Next*.zip`, without `Docker` |
+| Docker | [`docker-only`](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/tree/docker-only) | Container support with a separate compatible root solution | `*Docker*.zip`, without `KernelSU-Next` |
+| Baseline | [`baseline`](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/tree/baseline) | Development, comparison, and recovery diagnosis | `*Baseline*.zip` |
 
-> **Compatibility boundary:** only HyperOS `OS2.0.211.0.VLFCNXM` has been
-> adapted and validated on-device. Docker-related PIDS, DEVICE and other state
-> reuse inactive cgroup slots and Android KABI reserve fields to avoid growing
-> frozen structures. These spare slots are not A/B boot slots and do not imply
-> compatibility with another ROM.
+### Compatibility and risk
 
-Public branches contain neither SUSFS nor location experiments.
+> **The only supported system is HyperOS `OS2.0.211.0.VLFCNXM` (Android 15)
+> on the Redmi K50 Ultra.** Other HyperOS, modified-stock, and AOSP-derived ROMs
+> are outside the support scope even if they happen to boot.
 
-### `main` capabilities
+Docker state reuses inactive cgroup members and Android KABI reserve fields to
+preserve layouts consumed by current vendor modules. These “spare slots” are
+kernel structure/KABI slots, **not** the phone's A/B boot slots, and do not
+make this a cross-ROM universal kernel.
 
-- KernelSU-Next kernel root support;
-- PID, IPC and user namespaces;
-- PIDS and DEVICE cgroup controllers;
-- CPU shares, CFS bandwidth and block-I/O throttling;
-- OverlayFS and container filesystem requirements;
-- veth, bridge netfilter, conntrack, NAT and MASQUERADE;
-- packet, Unix socket and netlink diagnostics.
+Flashing a kernel can cause boot failure, module incompatibility, or
+inaccessible data. Keep the untouched stock `boot.img` matching the installed
+ROM, an unlocked bootloader, and a working Fastboot recovery path. Never
+relock the bootloader while modified boot components are installed.
 
-Xiaomi-sensitive structure changes use guarded KABI compatibility
-implementations. The accepted kernel revision retained byte-identical
-`vmlinux.symvers`, `abi.xml` and `abi_symbollist` compared with the clean
-baseline. Temporary boot validation passed with SELinux Enforcing, KernelSU
-root, Xiaomi QRTR, Wi-Fi, camera, audio and Docker core functionality working.
+### Quick install
 
-The consolidated `main` candidate also completed a full Docker 28.5.2 device
-regression. Default cgroup v2 core behavior, bridge/host networking, DNS,
-HTTP, private cgroup v1 resource controls, Buildx, Compose, IPv6 NAT, macvlan,
-and VXLAN passed. BFQ weight is marked SKIP because Moby does not recognize
-the BFQ-specific userspace file, while blkio read throttling was enforced.
-See the release notes and [Docker and KernelSU](wiki/Docker-and-KernelSU.md)
-for exact counts.
+1. Confirm the device codename is `diting`, the ROM is
+   `OS2.0.211.0.VLFCNXM`, and the bootloader is unlocked.
+2. Download the required ZIP from [Releases](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/releases)
+   and verify it against `SHA256SUMS`.
+3. Back up the stock `boot.img` for the current active slot.
+4. Install the ZIP with an AnyKernel3-compatible kernel flasher or recovery.
+5. After the first boot, check Android, networking, camera, audio, telephony,
+   and root/container features. Restore the stock boot through Fastboot if
+   anything is abnormal.
 
-### Build
+The AnyKernel3 package replaces only the kernel `Image` in the active boot
+slot and preserves the existing ramdisk. KernelSU-Next packages abort when a
+Magisk-patched or otherwise non-stock ramdisk is detected to avoid dual root.
+The AnyKernel3 install-and-recovery path in `v1.0.0-rc1` has not yet completed
+a public on-device rehearsal, so it remains a Pre-release for users with a
+working recovery path. See [Flashing and recovery](wiki/Flashing-and-Recovery.md).
+
+### Using Docker
+
+Docker variants provide **kernel capabilities**. They do not install the
+`docker` client, `dockerd`, image storage, or an autostart service. Docker
+userspace must be deployed separately.
+
+For daily use, keep Android's cgroup layout and use cgroup v2 with isolated
+networking. Switch to a Docker-private cgroup v1 mount namespace only when
+memory, CPU, devices, and blkio limits are required. Bridge networking also
+needs userspace policy routing that follows the active Wi-Fi, mobile-data, or
+VPN uplink. See [KernelSU and Docker](wiki/Docker-and-KernelSU.md).
+
+### Build from source
+
+Check out this repository as `common` in the ACK Build `14313284` workspace
+and use Clang/LLD `r416183b`. Initialize the pinned submodule on KernelSU
+branches:
 
 ```bash
 git submodule update --init --recursive
 
 HERMETIC_TOOLCHAIN=0 \
+BUILD_NUMBER=14313284 \
+KERNEL_DIR=common \
 BUILD_CONFIG=common/build.config.gki.aarch64.docker-network \
 OUT_DIR="$PWD/out/diting-main" \
 DIST_DIR="$PWD/out/diting-main/dist" \
 build/build.sh -j"$(nproc)"
 ```
 
-Use the matching ACK Build `14313284` workspace and Clang `r416183b`. After
-switching to another long-lived branch, follow that branch's README and build
-profile. Do not override the vendor-compatible kernel release.
+Use `build.config.gki.aarch64.docker-network` on `main` and `docker-only`, and
+`build.config.gki.aarch64` on `baseline` and `ksun-only`. See
+[Building and KMI checks](wiki/Build-and-Validation.md) for the complete
+workspace and gate sequence.
 
-### Releases
+### KMI contract
 
-One project version uses one GitHub Release page containing four clearly named
-AnyKernel3 packages. The release manifest maps every package to its source
-branch, source tag, commit and SHA-256. Never mix kernel images between
-variants or infer capabilities from an ambiguous filename.
+Display, camera, audio, networking, QRTR, and other Xiaomi hardware support is
+largely supplied by vendor modules. A kernel that compiles can still stop at
+the boot animation when a symbol CRC, `vermagic`, or frozen layout changes.
+Every feature change must preserve:
 
-### Device and runtime boundary
+- the target `UTS_RELEASE` and module `vermagic`;
+- exported KMI symbols and their CRCs;
+- sensitive layouts consumed by vendor modules;
+- strict symbol-list and KMI trimming checks.
 
-Repack only from an untouched stock `boot.img` matching the target ROM and use
-`fastboot boot` before persistent flashing. Dynamic Android policy routing for
-Docker bridge traffic belongs in the userspace runtime module, not the kernel.
+Do not hide compatibility failures by disabling `TRIM_NONLISTED_KMI` or strict
+mode. See [Architecture and KMI](wiki/Architecture-and-KMI.md).
 
-### Documentation and licensing
+### Contributing
 
-- [Build and validation](wiki/Build-and-Validation.md)
-- [Architecture and KMI](wiki/Architecture-and-KMI.md)
-- [Docker and KernelSU](wiki/Docker-and-KernelSU.md)
+The four long-lived branches are separate release products, not temporary
+feature branches waiting to be merged into `main`. Read
+[CONTRIBUTING.md](CONTRIBUTING.md), target the correct branch, and include the
+build profile, ABI/KMI comparison, and intended scope with a change. Do not
+commit boot images, ROMs, APKs, proprietary modules, device logs, or
+credentials.
+
+### Documentation and license
+
+- [Wiki home](wiki/Home.md)
 - [Flashing and recovery](wiki/Flashing-and-Recovery.md)
+- [Building and KMI checks](wiki/Build-and-Validation.md)
+- [Architecture and KMI](wiki/Architecture-and-KMI.md)
+- [KernelSU and Docker](wiki/Docker-and-KernelSU.md)
+- [Security and publication](wiki/Security-and-Publication.md)
 - [Third-party components](THIRD_PARTY.md)
 - [Original ACK guide](README.upstream.md)
 
-Kernel sources, project modifications and the KernelSU-Next kernel component
-use GPL-2.0-only and compatible per-file SPDX terms. Maintainer: Dugtx;
-upstream contributors retain authorship of their work.
+Kernel sources, project changes, and the KernelSU-Next kernel component use
+GPL-2.0-only and compatible per-file SPDX terms. Maintainer: Dugtx; upstream
+contributors retain authorship of their work.

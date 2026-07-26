@@ -15,7 +15,7 @@ layout.
 
 ## Compatibility rule / 兼容原则
 
-The accepted ACK build is the compatibility baseline. Every branch must retain:
+ACK Build `14313284` is the compatibility baseline. Every branch must retain:
 
 1. the exact `UTS_RELEASE` and module `vermagic`;
 2. the exported KMI symbol names;
@@ -41,8 +41,9 @@ where a runtime structure needs additional state.
 reserve 字段，与设备的 A/B boot slot 无关。它维持当前参考 ROM 的结构尺寸，
 但不能证明其他 ROM 与相同布局、符号 CRC 或厂商模块兼容。
 
-The adapters are device- and baseline-specific. They should not be copied to a
-different kernel release without BTF/layout, symbol CRC and real-device tests.
+The adapters are device- and baseline-specific. Do not copy them to a
+different kernel release without repeating BTF/layout, symbol CRC, and device
+compatibility work for that target.
 
 ## QRTR warning / QRTR 警告
 
@@ -50,5 +51,6 @@ Qualcomm QRTR endpoint symbols are required by Xiaomi modules such as
 `qrtr-smd.ko`. Modifying exported QRTR functions or their parsed type context
 can change genksyms CRCs even when the C signature appears unchanged. A QRTR
 module-load failure can break modem services and leave Android at the boot
-animation. Keep unrelated experiments outside exported vendor interfaces and
-always inspect early module-load errors after a temporary boot.
+animation. Keep unrelated changes outside exported vendor interfaces. When a
+new build stops during startup, inspect early module-load errors before making
+further configuration changes.
