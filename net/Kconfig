@@ -201,6 +201,15 @@ config BRIDGE_NETFILTER
 
 	  If unsure, say N.
 
+config XIAOMI_BRIDGE_NETFILTER_KABI_COMPAT
+	bool "Xiaomi GKI-compatible bridge netfilter symbols"
+	depends on BRIDGE_NETFILTER
+	help
+	  Preserve the stock BRIDGE_NETFILTER-disabled view while genksyms
+	  calculates exported symbol CRCs. The running kernel still contains
+	  bridge netfilter; this only prevents conditional network type details
+	  from changing the KMI seen by Xiaomi's out-of-tree vendor modules.
+
 source "net/netfilter/Kconfig"
 source "net/ipv4/netfilter/Kconfig"
 source "net/ipv6/netfilter/Kconfig"

@@ -1,0 +1,2 @@
+# Isolated experiment: add the Docker PID cgroup controller.
+CONFIG_CGROUP_PIDS=y

@@ -133,5 +133,33 @@
 #define ANDROID_KABI_USE2(number, _new1, _new2)			\
 	_ANDROID_KABI_REPLACE(_ANDROID_KABI_RESERVE(number), struct{ _new1; _new2; })
 
+/*
+ * ANDROID_KABI_USE_TWO_RESERVES(first, second, _new)
+ *   Replace two adjacent 64-bit reserve entries with one field up to 16 bytes
+ *   while preserving the original declarations for genksyms.
+ */
+#ifdef __GENKSYMS__
+#define ANDROID_KABI_USE_TWO_RESERVES(first, second, _new)	\
+	ANDROID_KABI_RESERVE(first);				\
+	ANDROID_KABI_RESERVE(second)
+#else
+#define ANDROID_KABI_USE_TWO_RESERVES(first, second, _new)		\
+	union {							\
+		_new;						\
+		struct {					\
+			_ANDROID_KABI_RESERVE(first);		\
+			_ANDROID_KABI_RESERVE(second);		\
+		};						\
+		union {					\
+			_Static_assert(sizeof(struct{_new;}) <= 2 * sizeof(u64), \
+				       __FILE__ ":" __stringify(__LINE__) \
+				       ": replacement is larger than two kABI reserves"); \
+			_Static_assert(__alignof__(struct{_new;}) <= __alignof__(u64), \
+				       __FILE__ ":" __stringify(__LINE__) \
+				       ": replacement alignment exceeds kABI reserves"); \
+		};						\
+	}
+#endif
+
 
 #endif /* _ANDROID_KABI_H */

@@ -103,6 +103,17 @@ config BLK_DEV_THROTTLING
 
 	See Documentation/admin-guide/cgroup-v1/blkio-controller.rst for more information.
 
+config XIAOMI_BLK_THROTTLE_KABI_COMPAT
+	bool "Xiaomi GKI-compatible block throttling state"
+	depends on BLK_DEV_THROTTLING
+	help
+	  Preserve the stock request_queue layout while enabling block I/O
+	  throttling. Store the throttle-data pointer in an existing Android
+	  kABI reserve instead of inserting it into the middle of request_queue.
+
+	  This is a device compatibility option. Enable it only when the stock
+	  vendor modules were built with CONFIG_BLK_DEV_THROTTLING disabled.
+
 config BLK_DEV_THROTTLING_LOW
 	bool "Block throttling .low limit interface support (EXPERIMENTAL)"
 	depends on BLK_DEV_THROTTLING

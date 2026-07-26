@@ -1,0 +1,6 @@
+# Preserve CGROUP_SUBSYS_COUNT=7 for Xiaomi vendor-module compatibility.
+# The stock legacy freezer controller is not mounted; cgroup2 freeze remains.
+# DEVICE takes the same subsystem slot without growing struct css_set.
+# CONFIG_CGROUP_FREEZER is not set
+CONFIG_CGROUP_DEVICE=y
+CONFIG_XIAOMI_CGROUP_DEVICE_KABI_COMPAT=y

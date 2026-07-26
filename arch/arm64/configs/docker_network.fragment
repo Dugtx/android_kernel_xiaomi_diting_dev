@@ -1,0 +1,7 @@
+# KMI-clean network additions validated independently before being stacked on
+# the accepted Docker resource-control profile. Keep IPVLAN, IPVS and SCTP out:
+# their selected headers changed existing Xiaomi vendor symbol CRCs.
+CONFIG_IP6_NF_NAT=y
+CONFIG_IP6_NF_TARGET_MASQUERADE=y
+CONFIG_MACVLAN=y
+CONFIG_VXLAN=y

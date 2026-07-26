@@ -7454,6 +7454,10 @@ EXPORT_SYMBOL_GPL(root_task_group);
 LIST_HEAD(task_groups);
 EXPORT_SYMBOL_GPL(task_groups);
 
+#ifdef CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT
+static struct cfs_bandwidth root_cfs_bandwidth;
+#endif
+
 /* Cacheline aligned slab cache for task_group */
 static struct kmem_cache *task_group_cache __read_mostly;
 #endif
@@ -7493,7 +7497,10 @@ void __init sched_init(void)
 		ptr += nr_cpu_ids * sizeof(void **);
 
 		root_task_group.shares = ROOT_TASK_GROUP_LOAD;
-		init_cfs_bandwidth(&root_task_group.cfs_bandwidth);
+#ifdef CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT
+		root_task_group.cfs_bandwidth = &root_cfs_bandwidth;
+#endif
+		init_cfs_bandwidth(tg_cfs_bandwidth(&root_task_group));
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 #ifdef CONFIG_RT_GROUP_SCHED
 		root_task_group.rt_se = (struct sched_rt_entity **)ptr;
@@ -8336,7 +8343,7 @@ static int __cfs_schedulable(struct task_group *tg, u64 period, u64 runtime);
 static int tg_set_cfs_bandwidth(struct task_group *tg, u64 period, u64 quota)
 {
 	int i, ret = 0, runtime_enabled, runtime_was_enabled;
-	struct cfs_bandwidth *cfs_b = &tg->cfs_bandwidth;
+	struct cfs_bandwidth *cfs_b = tg_cfs_bandwidth(tg);
 
 	if (tg == &root_task_group)
 		return -EINVAL;
@@ -8364,7 +8371,7 @@ static int tg_set_cfs_bandwidth(struct task_group *tg, u64 period, u64 quota)
 		return -EINVAL;
 
 	/*
-	 * Prevent race between setting of cfs_rq->runtime_enabled and
+	 * Prevent race between setting of the cfs_rq runtime-enabled state and
 	 * unthrottle_offline_cfs_rqs().
 	 */
 	get_online_cpus();
@@ -8399,10 +8406,10 @@ static int tg_set_cfs_bandwidth(struct task_group *tg, u64 period, u64 quota)
 		struct rq_flags rf;
 
 		rq_lock_irq(rq, &rf);
-		cfs_rq->runtime_enabled = runtime_enabled;
-		cfs_rq->runtime_remaining = 0;
+		cfs_rq_runtime_enabled(cfs_rq) = runtime_enabled;
+		cfs_rq_runtime_remaining(cfs_rq) = 0;
 
-		if (cfs_rq->throttled)
+		if (cfs_rq_throttled_state(cfs_rq))
 			unthrottle_cfs_rq(cfs_rq);
 		rq_unlock_irq(rq, &rf);
 	}
@@ -8419,7 +8426,7 @@ static int tg_set_cfs_quota(struct task_group *tg, long cfs_quota_us)
 {
 	u64 quota, period;
 
-	period = ktime_to_ns(tg->cfs_bandwidth.period);
+	period = ktime_to_ns(tg_cfs_bandwidth(tg)->period);
 	if (cfs_quota_us < 0)
 		quota = RUNTIME_INF;
 	else if ((u64)cfs_quota_us <= U64_MAX / NSEC_PER_USEC)
@@ -8434,10 +8441,10 @@ static long tg_get_cfs_quota(struct task_group *tg)
 {
 	u64 quota_us;
 
-	if (tg->cfs_bandwidth.quota == RUNTIME_INF)
+	if (tg_cfs_bandwidth(tg)->quota == RUNTIME_INF)
 		return -1;
 
-	quota_us = tg->cfs_bandwidth.quota;
+	quota_us = tg_cfs_bandwidth(tg)->quota;
 	do_div(quota_us, NSEC_PER_USEC);
 
 	return quota_us;
@@ -8451,7 +8458,7 @@ static int tg_set_cfs_period(struct task_group *tg, long cfs_period_us)
 		return -EINVAL;
 
 	period = (u64)cfs_period_us * NSEC_PER_USEC;
-	quota = tg->cfs_bandwidth.quota;
+	quota = tg_cfs_bandwidth(tg)->quota;
 
 	return tg_set_cfs_bandwidth(tg, period, quota);
 }
@@ -8460,7 +8467,7 @@ static long tg_get_cfs_period(struct task_group *tg)
 {
 	u64 cfs_period_us;
 
-	cfs_period_us = ktime_to_ns(tg->cfs_bandwidth.period);
+	cfs_period_us = ktime_to_ns(tg_cfs_bandwidth(tg)->period);
 	do_div(cfs_period_us, NSEC_PER_USEC);
 
 	return cfs_period_us;
@@ -8522,13 +8529,13 @@ static u64 normalize_cfs_quota(struct task_group *tg,
 static int tg_cfs_schedulable_down(struct task_group *tg, void *data)
 {
 	struct cfs_schedulable_data *d = data;
-	struct cfs_bandwidth *cfs_b = &tg->cfs_bandwidth;
+	struct cfs_bandwidth *cfs_b = tg_cfs_bandwidth(tg);
 	s64 quota = 0, parent_quota = -1;
 
 	if (!tg->parent) {
 		quota = RUNTIME_INF;
 	} else {
-		struct cfs_bandwidth *parent_b = &tg->parent->cfs_bandwidth;
+		struct cfs_bandwidth *parent_b = tg_cfs_bandwidth(tg->parent);
 
 		quota = normalize_cfs_quota(tg, d);
 		parent_quota = parent_b->hierarchical_quota;
@@ -8576,7 +8583,7 @@ static int __cfs_schedulable(struct task_group *tg, u64 period, u64 quota)
 static int cpu_cfs_stat_show(struct seq_file *sf, void *v)
 {
 	struct task_group *tg = css_tg(seq_css(sf));
-	struct cfs_bandwidth *cfs_b = &tg->cfs_bandwidth;
+	struct cfs_bandwidth *cfs_b = tg_cfs_bandwidth(tg);
 
 	seq_printf(sf, "nr_periods %d\n", cfs_b->nr_periods);
 	seq_printf(sf, "nr_throttled %d\n", cfs_b->nr_throttled);
@@ -8688,7 +8695,7 @@ static int cpu_extra_stat_show(struct seq_file *sf,
 #ifdef CONFIG_CFS_BANDWIDTH
 	{
 		struct task_group *tg = css_tg(css);
-		struct cfs_bandwidth *cfs_b = &tg->cfs_bandwidth;
+		struct cfs_bandwidth *cfs_b = tg_cfs_bandwidth(tg);
 		u64 throttled_usec;
 
 		throttled_usec = cfs_b->throttled_time;

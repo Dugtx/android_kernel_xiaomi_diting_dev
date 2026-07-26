@@ -1,0 +1,3 @@
+# Resource controls tested separately because they change scheduler/block code.
+CONFIG_CFS_BANDWIDTH=y
+CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT=y

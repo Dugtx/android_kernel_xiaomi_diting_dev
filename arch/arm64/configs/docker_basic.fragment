@@ -1,0 +1,10 @@
+# Docker Basic: low-risk additions on top of the Android 12 5.10 GKI config.
+# Keep namespace/KABI-sensitive options in later, separately tested rounds.
+CONFIG_DEVTMPFS=y
+CONFIG_DEVTMPFS_MOUNT=y
+CONFIG_FHANDLE=y
+CONFIG_NETLINK_DIAG=y
+CONFIG_PACKET_DIAG=y
+CONFIG_TMPFS_POSIX_ACL=y
+CONFIG_TMPFS_XATTR=y
+CONFIG_UNIX_DIAG=y
