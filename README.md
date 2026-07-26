@@ -1,10 +1,6 @@
-<a id="top"></a>
-
 # Redmi K50 Ultra 内核 / Kernel — KernelSU-Next + Docker
 
 [简体中文](#简体中文) | [English](#english)
-
-<a id="简体中文"></a>
 
 ## 简体中文
 
@@ -76,11 +72,7 @@ SPDX 条款。详情见 [COPYING](COPYING)、[AUTHORS.md](AUTHORS.md)和
 
 维护者：Dugtx。上游贡献者保留其对应代码的作者身份。
 
-[返回语言选择](#top)
-
 ---
-
-<a id="english"></a>
 
 ## English
 
@@ -155,5 +147,3 @@ use GPL-2.0-only and compatible per-file SPDX terms. See [COPYING](COPYING),
 [AUTHORS.md](AUTHORS.md) and [THIRD_PARTY.md](THIRD_PARTY.md).
 
 Maintainer: Dugtx. Upstream contributors retain authorship of their work.
-
-[Back to language selection](#top)
