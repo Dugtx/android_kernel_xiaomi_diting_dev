@@ -13,6 +13,7 @@ Describe the problem, the proposed change, and the intended target branch.
 
 ## KMI 与构建检查 / KMI and build checks
 
+- [ ] 每个新提交都包含有效的 `Signed-off-by` / Every new commit has a valid DCO sign-off
 - [ ] 使用全新输出目录完成构建 / Built from a clean output directory
 - [ ] `vmlinux.symvers` 与 baseline 一致，或已解释差异 / Compared with baseline
 - [ ] `abi.xml` 与 baseline 一致，或已解释差异 / Compared with baseline

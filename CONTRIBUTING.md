@@ -17,6 +17,19 @@
 `ksun-only` 整体合并进 `main` 来“同步能力”；公共修复应以可审查的提交进行
 移植。无法确定目标时，先开 Issue 描述影响范围。
 
+## DCO 签署
+
+所有新提交必须遵守仓库根目录的 [Developer Certificate of Origin 1.1](DCO)，
+并包含与提交者身份一致的 `Signed-off-by`。使用 Git 自动生成签署行：
+
+```bash
+git commit -s
+```
+
+签署表示提交者确认有权按照文件现有的开源许可证提交和分发该贡献。DCO 不转让
+版权，也不能替代现有 SPDX、作者和第三方许可证信息。不要为其他贡献者伪造或
+代填签署行。
+
 ## 开发环境
 
 使用与项目匹配的输入：
@@ -89,6 +102,21 @@ The four long-lived branches are independent release products. Do not merge
 an entire variant branch into `main` merely to synchronize features. Forward-
 port shared fixes as reviewable commits. Open an Issue first when the correct
 base is unclear.
+
+## DCO sign-off
+
+Every new commit must comply with the
+[Developer Certificate of Origin 1.1](DCO) and carry a `Signed-off-by` trailer
+matching the contributor's identity. Let Git add it with:
+
+```bash
+git commit -s
+```
+
+The sign-off certifies that the contributor has the right to submit and
+redistribute the change under the license indicated in the affected files.
+It does not transfer copyright or replace SPDX, authorship, or third-party
+license records. Never fabricate another contributor's sign-off.
 
 ## Development environment
 
