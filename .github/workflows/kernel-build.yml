@@ -1,0 +1,189 @@
+name: Reproducible kernel build
+
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: Branch/profile to build
+        required: true
+        default: main
+        type: choice
+        options:
+          - main
+          - docker-only
+          - ksun-only
+          - baseline
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kernel-${{ inputs.variant }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-kmi:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - name: Check out workflow metadata
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: main
+          path: orchestration
+          fetch-depth: 1
+          submodules: false
+
+      - name: Check out selected variant
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ inputs.variant }}
+          path: source
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Check out clean baseline
+        if: ${{ inputs.variant != 'baseline' }}
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: baseline
+          path: baseline
+          fetch-depth: 1
+          submodules: false
+
+      - name: Select build profile
+        id: profile
+        env:
+          VARIANT: ${{ inputs.variant }}
+        run: |
+          case "$VARIANT" in
+            main|docker-only)
+              echo 'config=common/build.config.gki.aarch64.docker-network' >> "$GITHUB_OUTPUT"
+              ;;
+            ksun-only|baseline)
+              echo 'config=common/build.config.gki.aarch64' >> "$GITHUB_OUTPUT"
+              ;;
+            *) exit 2 ;;
+          esac
+
+      - name: Create exact ACK Build 14313284 workspace
+        run: |
+          mkdir -p "$RUNNER_TEMP/ack"
+          curl --fail --location --retry 3 \
+            https://storage.googleapis.com/git-repo-downloads/repo \
+            -o "$RUNNER_TEMP/ack/repo"
+          chmod 0755 "$RUNNER_TEMP/ack/repo"
+          cd "$RUNNER_TEMP/ack"
+          ./repo init \
+            -u https://android.googlesource.com/kernel/manifest \
+            -b common-android12-5.10-2025-05 \
+            --depth=1
+          cp "$GITHUB_WORKSPACE/orchestration/ci/manifest-14313284.xml" \
+            .repo/manifests/default.xml
+          ./repo sync -c --no-tags --prune --optimized-fetch -j4 \
+            build \
+            prebuilts-master/clang/host/linux-x86 \
+            prebuilts/build-tools \
+            prebuilts/kernel-build-tools
+
+      - name: Verify pinned toolchain
+        run: |
+          "$RUNNER_TEMP/ack/prebuilts-master/clang/host/linux-x86/clang-r416183b/bin/clang" \
+            --version | tee "$RUNNER_TEMP/clang-version.txt"
+          grep -q '12.0.5' "$RUNNER_TEMP/clang-version.txt"
+
+      - name: Build selected variant
+        env:
+          BUILD_CONFIG: ${{ steps.profile.outputs.config }}
+        run: |
+          cd "$RUNNER_TEMP/ack"
+          ln -s "$GITHUB_WORKSPACE/source" common
+          HERMETIC_TOOLCHAIN=0 \
+          BUILD_NUMBER=14313284 \
+          KERNEL_DIR=common \
+          BUILD_CONFIG="$BUILD_CONFIG" \
+          OUT_DIR="$RUNNER_TEMP/target-out" \
+          DIST_DIR="$RUNNER_TEMP/target-dist" \
+            build/build.sh -j"$(nproc)"
+
+      - name: Build clean baseline for KMI comparison
+        if: ${{ inputs.variant != 'baseline' }}
+        run: |
+          cd "$RUNNER_TEMP/ack"
+          rm common
+          ln -s "$GITHUB_WORKSPACE/baseline" common
+          HERMETIC_TOOLCHAIN=0 \
+          BUILD_NUMBER=14313284 \
+          KERNEL_DIR=common \
+          BUILD_CONFIG=common/build.config.gki.aarch64 \
+          OUT_DIR="$RUNNER_TEMP/baseline-out" \
+          DIST_DIR="$RUNNER_TEMP/baseline-dist" \
+            build/build.sh -j"$(nproc)"
+
+      - name: Enforce release identity and KMI contract
+        env:
+          VARIANT: ${{ inputs.variant }}
+        run: |
+          strings "$RUNNER_TEMP/target-dist/Image" | \
+            grep -m1 '^Linux version 5.10.236-android12-9-00003-gfb24cf99ad97-ab14313284'
+          if [[ "$VARIANT" != baseline ]]; then
+            cmp "$RUNNER_TEMP/baseline-dist/vmlinux.symvers" "$RUNNER_TEMP/target-dist/vmlinux.symvers"
+            cmp "$RUNNER_TEMP/baseline-dist/abi.xml" "$RUNNER_TEMP/target-dist/abi.xml"
+            cmp "$RUNNER_TEMP/baseline-dist/abi_symbollist" "$RUNNER_TEMP/target-dist/abi_symbollist"
+          fi
+
+      - name: Enforce variant configuration boundaries
+        env:
+          VARIANT: ${{ inputs.variant }}
+        run: |
+          config="$RUNNER_TEMP/target-out/common/.config"
+          case "$VARIANT" in
+            main)
+              grep -q '^CONFIG_KSU=y$' "$config"
+              grep -q '^CONFIG_CGROUP_PIDS=y$' "$config"
+              grep -q '^CONFIG_BLK_DEV_THROTTLING=y$' "$config"
+              ;;
+            docker-only)
+              ! grep -q '^CONFIG_KSU=y$' "$config"
+              grep -q '^CONFIG_CGROUP_PIDS=y$' "$config"
+              grep -q '^CONFIG_BLK_DEV_THROTTLING=y$' "$config"
+              ;;
+            ksun-only)
+              grep -q '^CONFIG_KSU=y$' "$config"
+              ! grep -q '^CONFIG_XIAOMI_CGROUP_PIDS_KABI_COMPAT=y$' "$config"
+              ;;
+            baseline)
+              ! grep -q '^CONFIG_KSU=y$' "$config"
+              ! grep -q '^CONFIG_XIAOMI_CGROUP_PIDS_KABI_COMPAT=y$' "$config"
+              ;;
+          esac
+
+      - name: Prepare artifact and provenance
+        env:
+          VARIANT: ${{ inputs.variant }}
+        run: |
+          artifact="$GITHUB_WORKSPACE/artifact"
+          mkdir -p "$artifact"
+          cp "$RUNNER_TEMP/target-dist/Image" \
+             "$RUNNER_TEMP/target-dist/Image.lz4" \
+             "$RUNNER_TEMP/target-dist/vmlinux.symvers" \
+             "$RUNNER_TEMP/target-dist/abi.xml" \
+             "$RUNNER_TEMP/target-dist/abi_symbollist" \
+             "$artifact/"
+          cp "$RUNNER_TEMP/target-out/common/.config" "$artifact/kernel.config"
+          {
+            echo "variant=$VARIANT"
+            echo "build_number=14313284"
+            echo "source=$(git -C "$GITHUB_WORKSPACE/source" rev-parse HEAD)"
+            echo "common_base=fb24cf99ad973cd4c7c7fa375c6053f939ef3a89"
+            echo "clang=r416183b"
+          } > "$artifact/PROVENANCE.txt"
+          (cd "$artifact" && sha256sum * > SHA256SUMS)
+
+      - name: Upload kernel and KMI evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: diting-kernel-${{ inputs.variant }}-${{ github.run_id }}
+          path: artifact/
+          if-no-files-found: error
+          retention-days: 14

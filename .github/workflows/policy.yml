@@ -1,0 +1,52 @@
+name: Policy and source checks
+
+on:
+  pull_request:
+  push:
+    branches: [main, baseline, docker-only, ksun-only]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: policy-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-policy:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          submodules: false
+
+      - name: Determine DCO range
+        id: range
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [[ "$EVENT_NAME" == pull_request ]]; then
+            echo "range=$PR_BASE..HEAD" >> "$GITHUB_OUTPUT"
+          elif [[ -n "$BEFORE" && "$BEFORE" != 0000000000000000000000000000000000000000 ]]; then
+            echo "range=$BEFORE..HEAD" >> "$GITHUB_OUTPUT"
+          else
+            echo "range=HEAD^..HEAD" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Enforce DCO trailers
+        run: scripts/ci/check-dco.sh '${{ steps.range.outputs.range }}'
+
+      - name: Check patch whitespace
+        run: git diff --check '${{ steps.range.outputs.range }}'
+
+      - name: Validate Docker module source
+        if: ${{ hashFiles('runtime/kernelsu/docker/validate-source.sh') != '' }}
+        run: runtime/kernelsu/docker/validate-source.sh
+
+      - name: Check WebUI JavaScript syntax
+        if: ${{ hashFiles('runtime/kernelsu/docker/webroot/app.js') != '' }}
+        run: node --check runtime/kernelsu/docker/webroot/app.js
