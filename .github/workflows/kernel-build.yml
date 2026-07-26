@@ -96,10 +96,12 @@ jobs:
 
       - name: Provision memory for ThinLTO
         run: |
-          sudo fallocate -l 16G /swapfile
-          sudo chmod 0600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
+          swapfile="$RUNNER_TEMP/ci-swapfile"
+          sudo fallocate -l 16G "$swapfile"
+          sudo chmod 0600 "$swapfile"
+          sudo mkswap "$swapfile"
+          sudo swapon "$swapfile"
+          sudo swapon --show
           free -h
           df -h "$RUNNER_TEMP"
 
