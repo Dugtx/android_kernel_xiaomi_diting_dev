@@ -1,7 +1,0 @@
-#!/system/bin/sh
-
-MODDIR=/data/adb/modules/dugtx-docker-dev
-export DOCKER_HOST=unix:///data/local/docker/run/docker.sock
-export DOCKER_CONFIG=/data/unencrypted/docker/config
-export DOCKER_CLI_PLUGIN_EXTRA_DIRS="$MODDIR/cli-plugins"
-exec "$MODDIR/bin/docker" "$@"

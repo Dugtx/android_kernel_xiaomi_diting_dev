@@ -13,31 +13,20 @@ listed here; it does not replace on-device boot, hardware, and recovery tests.
 long-lived branches. It checks:
 
 - a DCO `Signed-off-by` trailer on every non-merge commit;
-- whitespace with `git diff --check`;
-- POSIX shell syntax and the Docker module's fixed file set;
-- KernelSU WebUI JavaScript syntax.
+- whitespace with `git diff --check`.
 
 The DCO check is implemented in this repository. No third-party DCO action is
 granted repository permissions.
 
-## Docker module package / Docker 模块打包
+## Docker userspace module / Docker 用户态模块
 
-`.github/workflows/docker-module.yml` builds the self-contained KernelSU module
-when its source changes or when manually dispatched. The build:
+The Docker KernelSU module is maintained and packaged in
+[android_docker_runtime_diting](https://github.com/Dugtx/android_docker_runtime_diting).
+Keeping runtime source and release automation there allows this repository's CI
+to stay focused on kernel builds and KMI evidence.
 
-1. reads pinned versions and SHA-256 values from `runtime/kernelsu/docker/versions.env`;
-2. downloads Docker Engine, Buildx, and Compose from their official release URLs;
-3. applies the documented equal-length Android runtime path substitutions;
-4. validates scripts and assembles a deterministic ZIP file list;
-5. embeds license, provenance, and per-file SHA-256 records;
-6. uploads the ZIP and its checksum as a short-lived workflow artifact.
-
-The source tree deliberately excludes the roughly 300 MB uncompressed
-third-party runtime. A changed upstream asset fails its hash gate instead of
-silently entering a release.
-
-源码仓库不保存大型 Docker 二进制。任何上游文件变化都会触发哈希失败，不会静默
-进入发布包。
+Docker KernelSU 模块已迁移至独立项目维护和打包。本仓库只负责内核能力、KMI 证据
+与 AnyKernel3 产物，避免两份模块源码长期分叉。
 
 ## Reproducible kernel build / 可复现内核编译
 
@@ -66,20 +55,10 @@ not change the kernel source, configuration, or KMI checks.
 默认手动触发。公共 runner 会预先配置 swap，并将 Make 并发限制为 2，以避免
 ThinLTO 链接超过物理内存；该资源保护不修改内核源码、配置或 KMI 门禁。
 
-## Publishing the module / 发布模块
-
-Push a signed tag matching the module version, for example:
-
-```bash
-git tag -s docker-module-v2.0.0 -m "Docker KernelSU module v2.0.0"
-git push origin docker-module-v2.0.0
-```
-
-`.github/workflows/docker-module-release.yml` refuses a tag that disagrees
-with `module.prop`, rebuilds all pinned inputs, and publishes the ZIP plus its
-SHA-256 file. Kernel/AnyKernel releases remain separate and require the device
-acceptance evidence described in [Building and KMI checks](Build-and-Validation.md)
-and [Flashing and recovery](Flashing-and-Recovery.md).
+Kernel/AnyKernel releases remain separate from the userspace module and require
+the device acceptance evidence described in
+[Building and KMI checks](Build-and-Validation.md) and
+[Flashing and recovery](Flashing-and-Recovery.md).
 
 ## Trust boundary / 信任边界
 

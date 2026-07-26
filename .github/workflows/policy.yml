@@ -42,11 +42,3 @@ jobs:
 
       - name: Check patch whitespace
         run: git diff --check '${{ steps.range.outputs.range }}'
-
-      - name: Validate Docker module source
-        if: ${{ hashFiles('runtime/kernelsu/docker/validate-source.sh') != '' }}
-        run: runtime/kernelsu/docker/validate-source.sh
-
-      - name: Check WebUI JavaScript syntax
-        if: ${{ hashFiles('runtime/kernelsu/docker/webroot/app.js') != '' }}
-        run: node --check runtime/kernelsu/docker/webroot/app.js

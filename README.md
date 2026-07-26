@@ -63,10 +63,10 @@ KernelSU-Next 的包检测到 Magisk 或其他非纯净 ramdisk 时会中止，�
 
 ### Docker 使用说明
 
-Docker 变体提供**内核能力**。`main` 用户还可以安装 Releases 中单独发布的
-`diting-docker-kernelsu-v*.zip` KernelSU 模块，一次获得 Docker Engine、Buildx、
-Compose、ext4 镜像管理、开机服务与 WebUI。大型第三方二进制不进入 Git；CI 从
-官方地址下载固定版本并核对 SHA-256 后才打包。
+Docker 变体提供**内核能力**。`main` 用户可安装独立项目
+[android_docker_runtime_diting](https://github.com/Dugtx/android_docker_runtime_diting)
+发布的 KernelSU 模块，获得 Docker Engine、Buildx、Compose、ext4 镜像管理、
+开机服务与 WebUI。模块源码、构建工作流、第三方版本和哈希均在独立项目维护。
 
 该模块依赖 KernelSU，因此不适用于不含 KernelSU 的 `docker-only` 分支；该分支
 仍面向自行部署兼容 Root 与用户态运行时的高级用户。
@@ -203,11 +203,11 @@ working recovery path. See [Flashing and recovery](wiki/Flashing-and-Recovery.md
 ### Using Docker
 
 Docker variants provide the required **kernel capabilities**. Users of `main`
-can also install the separately released `diting-docker-kernelsu-v*.zip`
-KernelSU module to obtain Docker Engine, Buildx, Compose, ext4 image management,
-an autostart service, and a WebUI. Large third-party binaries are not committed
-to Git; CI downloads pinned upstream assets and verifies SHA-256 values before
-packaging them.
+can install the KernelSU module released by the separate
+[android_docker_runtime_diting](https://github.com/Dugtx/android_docker_runtime_diting)
+project to obtain Docker Engine, Buildx, Compose, ext4 image management, an
+autostart service, and a WebUI. Its source, build workflows, third-party pins,
+and checksums are maintained in that project.
 
 The module requires KernelSU and therefore is not usable on the `docker-only`
 branch by itself. That branch remains intended for advanced users who provide

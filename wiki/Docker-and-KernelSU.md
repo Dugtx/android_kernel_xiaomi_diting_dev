@@ -3,12 +3,14 @@
 KernelSU-Next and Docker solve different parts of the system. KernelSU-Next
 provides controlled root access. The Docker profile provides kernel features
 for containers. Docker Engine, storage, networking policy, and startup remain
-userspace responsibilities, implemented for `main` by the separately released
-KernelSU module in `runtime/kernelsu/docker`.
+userspace responsibilities, implemented for `main` by the separately maintained
+[android_docker_runtime_diting](https://github.com/Dugtx/android_docker_runtime_diting)
+KernelSU module.
 
 KernelSU-Next 与 Docker 负责不同层次：前者提供可控 Root，后者需要内核容器能力。
-Docker Engine、镜像存储、网络策略和开机服务仍属于用户态；`main` 分支通过
-`runtime/kernelsu/docker` 中的独立 KernelSU 模块实现这些能力。
+Docker Engine、镜像存储、网络策略和开机服务仍属于用户态；`main` 用户可安装
+[android_docker_runtime_diting](https://github.com/Dugtx/android_docker_runtime_diting)
+独立 KernelSU 模块实现这些能力。
 
 ## KernelSU-Next
 
@@ -52,7 +54,8 @@ slots are not phone A/B boot slots.
 ## KernelSU runtime module / KernelSU 用户态模块
 
 Installing a Docker kernel alone does not install a `docker` command. Users of
-`main` can install the separately released `diting-docker-kernelsu-v*.zip`,
+`main` can install the module released by
+[android_docker_runtime_diting](https://github.com/Dugtx/android_docker_runtime_diting),
 which provides:
 
 - AArch64 Docker client, `dockerd`, containerd, runc, and optional plugins;
@@ -62,10 +65,10 @@ which provides:
 - cgroup and network setup scripts;
 - a KernelSU startup service and WebUI.
 
-只刷 Docker 内核不会自动出现 `docker` 命令。`main` 用户可再安装独立发布的
-`diting-docker-kernelsu-v*.zip`，获得 AArch64 用户态、ext4 存储、DNS、cgroup、
-网络脚本、开机服务和 WebUI。模块默认使用 cgroup v2、isolated 网络和 8 GiB
-镜像；支持安全扩容但不支持缩容。
+只刷 Docker 内核不会自动出现 `docker` 命令。`main` 用户可再安装独立项目发布的
+KernelSU 模块，获得 AArch64 用户态、ext4 存储、DNS、cgroup、网络脚本、开机服务
+和 WebUI。模块默认使用 cgroup v2、isolated 网络和 8 GiB 镜像；支持安全扩容但
+不支持缩容。
 
 The module requires KernelSU. `docker-only` users must provide their own
 compatible root and userspace deployment. Module removal preserves
@@ -121,6 +124,7 @@ The public Docker kernel and module do not provide:
 - CRIU checkpoint/restore;
 - guaranteed compatibility with another ROM.
 
-Version-specific test coverage and known issues belong to each
-[GitHub Release](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/releases),
-so this page can remain a stable description of how the feature works.
+Kernel test coverage belongs to this repository's
+[GitHub Releases](https://github.com/Dugtx/android_kernel_xiaomi_diting_dev/releases).
+Runtime versions, packages, and runtime-specific issues belong to the
+[module repository](https://github.com/Dugtx/android_docker_runtime_diting).
