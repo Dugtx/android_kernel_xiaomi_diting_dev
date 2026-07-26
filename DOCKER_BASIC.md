@@ -1,5 +1,7 @@
 # Docker kernel profile for Redmi K50 Ultra
 
+English | [简体中文](DOCKER_BASIC.zh-CN.md)
+
 Author: Dugtx
 
 This profile extends the pinned Android 12 5.10 GKI configuration without
