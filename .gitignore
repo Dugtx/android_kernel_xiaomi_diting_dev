@@ -11,6 +11,8 @@
 # Normal rules (sorted alphabetically)
 #
 .*
+!.github/
+!.github/PULL_REQUEST_TEMPLATE.md
 *.a
 *.asn1.[ch]
 *.bin
