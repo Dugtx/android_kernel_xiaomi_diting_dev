@@ -101,3 +101,16 @@ grep -E '^(CONFIG_(PID_NS|USER_NS|IPC_NS|SYSVIPC|CGROUP_PIDS|CGROUP_DEVICE|CFS_B
 
 The actual output subdirectory follows `KERNEL_DIR`; adjust the path if the
 checkout has another name.
+
+## 6. Accepted `main` candidate / 已验收的 `main` 候选
+
+- source tag: `diting-ksun-docker-v1.0.0-rc1`
+- tested source: `059228c8c44bfdd7808467b3db78e8e991ec359e`
+- Image SHA-256: `1ceaf31279cd31f155609e270031f52cda2341cfe17253c4e5f40b70bbb70515`
+- boot method: temporary `fastboot boot`, not persistent flash
+- reference ROM: `OS2.0.211.0.VLFCNXM`
+
+Android completed boot with SELinux Enforcing. KernelSU root and the Xiaomi
+QRTR, Wi-Fi, display, camera, and audio module paths remained operational.
+Docker test counts and the external Docker Hub limitation are recorded in
+[Docker and KernelSU](Docker-and-KernelSU.md).

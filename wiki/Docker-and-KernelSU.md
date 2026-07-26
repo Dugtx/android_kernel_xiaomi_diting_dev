@@ -32,6 +32,35 @@ It inherits the tested fragments in this order:
 Docker userspace, storage images, daemon configuration and Android policy
 routing scripts are intentionally separate from the kernel repository.
 
+## Accepted device regression / 已通过的真机回归
+
+The `main` release candidate was temporarily booted on HyperOS
+`OS2.0.211.0.VLFCNXM` and tested with Docker Engine 28.5.2:
+
+| Area | Result |
+| --- | --- |
+| default cgroup v2 core | 11 PASS / 0 FAIL |
+| bridge networking, DNS and HTTP | 7 PASS / 0 FAIL |
+| host networking, DNS and HTTP | 6 PASS / 0 FAIL |
+| private cgroup v1 resource controls | 9 PASS / 1 SKIP / 0 FAIL |
+| Buildx and Compose | 5 PASS / 0 FAIL |
+| IPv6 NAT, macvlan and VXLAN | 8 PASS / 0 FAIL |
+| kernel runtime gates | 29 PASS / 1 WARN / 0 FAIL |
+
+The resource-control SKIP is limited to Moby not recognizing the kernel's
+BFQ-specific weight interface. Memory, swap, CPU shares, CFS quota, devices,
+and a 1 MiB/s block read throttle were enforced. The runtime warning records
+that F2FS is unsuitable as an OverlayFS upper on this ROM; a dedicated ext4
+data image was used successfully.
+
+Android has no global `/etc/resolv.conf`. The accepted userspace runtime adds
+one only inside the dockerd mount namespace and leaves Android's global mount
+tree unchanged. Both bridge and host containers passed DNS and HTTP tests.
+Registry availability remains an external-network property: during the final
+test Docker Hub resolved to an address whose TCP/443 connection also timed out
+from the Android host, while local image import and all local build tests
+passed.
+
 ## Android networking note / Android 网络说明
 
 Docker bridge traffic may need Android policy-routing rules for the active

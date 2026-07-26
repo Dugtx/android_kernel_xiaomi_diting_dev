@@ -40,6 +40,12 @@
 临时设备启动通过，SELinux Enforcing、KernelSU Root、小米 QRTR、Wi-Fi、相机、
 音频及 Docker 核心能力正常。
 
+统一仓库的 `main` 候选还完成了 Docker 28.5.2 全量真机回归：默认 cgroup v2
+核心、bridge/host 网络、DNS、HTTP、私有 cgroup v1 资源限制、Buildx、Compose、
+IPv6 NAT、macvlan 与 VXLAN 均通过。BFQ 权重因 Moby 用户态不识别而标记为
+SKIP，但 blkio 读限速已生效。详细计数见发布说明和
+[Docker 与 KernelSU](wiki/Docker-and-KernelSU.md)。
+
 ### 编译
 
 ```bash
@@ -122,6 +128,14 @@ implementations. The accepted kernel revision retained byte-identical
 `vmlinux.symvers`, `abi.xml` and `abi_symbollist` compared with the clean
 baseline. Temporary boot validation passed with SELinux Enforcing, KernelSU
 root, Xiaomi QRTR, Wi-Fi, camera, audio and Docker core functionality working.
+
+The consolidated `main` candidate also completed a full Docker 28.5.2 device
+regression. Default cgroup v2 core behavior, bridge/host networking, DNS,
+HTTP, private cgroup v1 resource controls, Buildx, Compose, IPv6 NAT, macvlan,
+and VXLAN passed. BFQ weight is marked SKIP because Moby does not recognize
+the BFQ-specific userspace file, while blkio read throttling was enforced.
+See the release notes and [Docker and KernelSU](wiki/Docker-and-KernelSU.md)
+for exact counts.
 
 ### Build
 
