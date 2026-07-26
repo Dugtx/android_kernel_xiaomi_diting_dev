@@ -3,10 +3,12 @@
 KernelSU-Next and Docker solve different parts of the system. KernelSU-Next
 provides controlled root access. The Docker profile provides kernel features
 for containers. Docker Engine, storage, networking policy, and startup remain
-userspace responsibilities.
+userspace responsibilities, implemented for `main` by the separately released
+KernelSU module in `runtime/kernelsu/docker`.
 
 KernelSU-Next 与 Docker 负责不同层次：前者提供可控 Root，后者需要内核容器能力。
-Docker Engine、镜像存储、网络策略和开机服务仍属于用户态。
+Docker Engine、镜像存储、网络策略和开机服务仍属于用户态；`main` 分支通过
+`runtime/kernelsu/docker` 中的独立 KernelSU 模块实现这些能力。
 
 ## KernelSU-Next
 
@@ -47,20 +49,27 @@ Changes that need additional runtime state use guarded KABI adapters described
 in [Architecture and KMI](Architecture-and-KMI.md). The cgroup/KABI spare
 slots are not phone A/B boot slots.
 
-## Userspace required / 仍需用户态
+## KernelSU runtime module / KernelSU 用户态模块
 
-Installing a Docker kernel does not install a `docker` command. A usable
-environment must separately provide:
+Installing a Docker kernel alone does not install a `docker` command. Users of
+`main` can install the separately released `diting-docker-kernelsu-v*.zip`,
+which provides:
 
 - AArch64 Docker client, `dockerd`, containerd, runc, and optional plugins;
 - an ext4 data store suitable for OverlayFS;
 - daemon state and socket paths writable on Android;
 - DNS configuration visible to dockerd without modifying `/system`;
 - cgroup and network setup scripts;
-- an optional KernelSU startup module.
+- a KernelSU startup service and WebUI.
 
-安装 Docker 内核后不会自动出现 `docker` 命令。还需要单独部署 AArch64 用户态、
-ext4 存储、DNS、cgroup、网络脚本和可选的开机模块。
+只刷 Docker 内核不会自动出现 `docker` 命令。`main` 用户可再安装独立发布的
+`diting-docker-kernelsu-v*.zip`，获得 AArch64 用户态、ext4 存储、DNS、cgroup、
+网络脚本、开机服务和 WebUI。模块默认使用 cgroup v2、isolated 网络和 8 GiB
+镜像；支持安全扩容但不支持缩容。
+
+The module requires KernelSU. `docker-only` users must provide their own
+compatible root and userspace deployment. Module removal preserves
+`/data/unencrypted/docker`; destructive removal remains an explicit action.
 
 HyperOS data storage is F2FS and is not used directly as the OverlayFS upper
 for this runtime design. A dedicated ext4 image avoids changing the Android
@@ -103,9 +112,9 @@ runtime concerns, not kernel configuration options.
 
 ## Scope and limits / 能力边界
 
-The public Docker profile does not provide:
+The public Docker kernel and module do not provide:
 
-- Docker userspace or a ready-to-run Linux distribution;
+- a ready-to-run Linux distribution or preloaded container images;
 - hardware-accelerated CUDA/OpenCL container workloads;
 - KVM acceleration (`/dev/kvm` is not exposed by the stock boot chain);
 - IPVS/Swarm routing mesh;

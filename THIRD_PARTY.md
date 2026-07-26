@@ -9,13 +9,18 @@ repository. It is not a replacement for each component's license text.
 | Android Common Kernel | `android12-5.10-2025-05_r6`, base `fb24cf99ad973cd4c7c7fa375c6053f939ef3a89` | Android/GKI integration and ABI definitions | GPL-2.0-only and per-file SPDX licenses |
 | KernelSU-Next | `https://github.com/KernelSU-Next/KernelSU-Next.git`, pinned submodule commit `3b18216f71df189ab3d1b1ce0bdb21be1268e771` (`v3.3.0`) | Kernel root implementation on KSUN-enabled branches | GPL-2.0 |
 | Android Clang | `r416183b` from ACK Build `14313284` | Compiler and linker; not vendored in this repository | Apache-2.0 with LLVM exceptions, as distributed upstream |
+| Docker Engine static bundle | `28.5.2`, pinned SHA-256 in `runtime/kernelsu/docker/versions.env` | KernelSU module release input; not stored in Git | Apache-2.0 components |
+| Docker Buildx | `0.35.0`, pinned SHA-256 | Optional Docker CLI plugin in the KernelSU module | Apache-2.0 |
+| Docker Compose | `5.3.1`, pinned SHA-256 | Docker CLI plugin in the KernelSU module | Apache-2.0 |
 
 ## Deliberately not vendored
 
 The source branches do not redistribute Xiaomi ROM images, firmware,
 proprietary kernel modules, manager APKs, Docker userspace binaries or Android
-platform-tools. Release installer packages contain only the applicable kernel
-image, installer logic and required license/provenance files.
+platform-tools. Kernel installer packages contain only the applicable kernel
+image, installer logic and required license/provenance files. The separate
+Docker KernelSU module release contains pinned upstream Docker binaries,
+license text, and a complete package checksum manifest assembled by CI.
 
 ## Submodule verification
 

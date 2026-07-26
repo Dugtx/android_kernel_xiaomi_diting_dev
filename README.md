@@ -63,8 +63,13 @@ KernelSU-Next 的包检测到 Magisk 或其他非纯净 ramdisk 时会中止，�
 
 ### Docker 使用说明
 
-Docker 变体提供的是**内核能力**，不会自动安装 `docker`、`dockerd`、镜像存储
-或开机服务。Docker 用户态运行时需要单独部署。
+Docker 变体提供**内核能力**。`main` 用户还可以安装 Releases 中单独发布的
+`diting-docker-kernelsu-v*.zip` KernelSU 模块，一次获得 Docker Engine、Buildx、
+Compose、ext4 镜像管理、开机服务与 WebUI。大型第三方二进制不进入 Git；CI 从
+官方地址下载固定版本并核对 SHA-256 后才打包。
+
+该模块依赖 KernelSU，因此不适用于不含 KernelSU 的 `docker-only` 分支；该分支
+仍面向自行部署兼容 Root 与用户态运行时的高级用户。
 
 日用建议保持 Android 原有布局，使用 cgroup v2 和隔离网络；需要内存、CPU、
 devices、blkio 等完整资源限制时，再使用 Docker 私有挂载命名空间中的 cgroup
@@ -120,6 +125,7 @@ build/build.sh -j"$(nproc)"
 - [源码编译与 KMI 检查](wiki/Build-and-Validation.md)
 - [架构与 KMI](wiki/Architecture-and-KMI.md)
 - [KernelSU 与 Docker](wiki/Docker-and-KernelSU.md)
+- [CI 与发布工作流](wiki/CI-and-Releases.md)
 - [安全与发布](wiki/Security-and-Publication.md)
 - [第三方组件](THIRD_PARTY.md)
 - [原始 ACK 指南](README.upstream.md)
@@ -196,9 +202,16 @@ working recovery path. See [Flashing and recovery](wiki/Flashing-and-Recovery.md
 
 ### Using Docker
 
-Docker variants provide **kernel capabilities**. They do not install the
-`docker` client, `dockerd`, image storage, or an autostart service. Docker
-userspace must be deployed separately.
+Docker variants provide the required **kernel capabilities**. Users of `main`
+can also install the separately released `diting-docker-kernelsu-v*.zip`
+KernelSU module to obtain Docker Engine, Buildx, Compose, ext4 image management,
+an autostart service, and a WebUI. Large third-party binaries are not committed
+to Git; CI downloads pinned upstream assets and verifies SHA-256 values before
+packaging them.
+
+The module requires KernelSU and therefore is not usable on the `docker-only`
+branch by itself. That branch remains intended for advanced users who provide
+a separate compatible root and userspace runtime.
 
 For daily use, keep Android's cgroup layout and use cgroup v2 with isolated
 networking. Switch to a Docker-private cgroup v1 mount namespace only when
@@ -260,6 +273,7 @@ credentials.
 - [Building and KMI checks](wiki/Build-and-Validation.md)
 - [Architecture and KMI](wiki/Architecture-and-KMI.md)
 - [KernelSU and Docker](wiki/Docker-and-KernelSU.md)
+- [CI and release workflows](wiki/CI-and-Releases.md)
 - [Security and publication](wiki/Security-and-Publication.md)
 - [Third-party components](THIRD_PARTY.md)
 - [Original ACK guide](README.upstream.md)

@@ -1,0 +1,41 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #0b0f14;
+  color: #ecf4ff;
+  --card: #141b24;
+  --line: #263344;
+  --accent: #4aa3ff;
+  --accent-strong: #1976d2;
+  --danger: #d94b58;
+  --muted: #9fb0c3;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: linear-gradient(145deg, #0b0f14, #101a27); }
+main { width: min(100%, 720px); margin: 0 auto; padding: 28px 18px 64px; }
+header { padding: 12px 4px 18px; }
+.eyebrow { margin: 0 0 6px; color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: .16em; }
+h1 { margin: 0; font-size: clamp(30px, 8vw, 48px); }
+.subtitle, .hint { color: var(--muted); }
+.subtitle { margin: 8px 0 0; }
+.card { margin-top: 16px; padding: 18px; border: 1px solid var(--line); border-radius: 18px; background: color-mix(in srgb, var(--card) 94%, transparent); box-shadow: 0 14px 40px #0005; }
+h2 { margin: 0 0 16px; font-size: 18px; }
+.section-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.section-title h2 { margin: 0; }
+label { display: grid; gap: 8px; margin: 14px 0; color: var(--muted); font-size: 14px; }
+select, input { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: #0c121a; color: #fff; font: inherit; }
+.switch-row { grid-template-columns: 1fr auto; align-items: center; }
+.switch-row input { width: 24px; min-height: 24px; accent-color: var(--accent); }
+button { min-height: 44px; padding: 10px 14px; border: 0; border-radius: 12px; background: var(--accent-strong); color: #fff; font-weight: 700; }
+button:disabled { opacity: .5; }
+button.secondary { border: 1px solid var(--line); background: #202c3a; }
+button.danger { background: var(--danger); }
+.button-grid { display: grid; gap: 10px; margin-top: 14px; }
+.button-grid.three { grid-template-columns: repeat(3, 1fr); }
+pre { max-height: 330px; overflow: auto; margin: 14px 0 0; padding: 13px; border-radius: 12px; background: #090d12; color: #cce4ff; font: 12px/1.55 ui-monospace, monospace; white-space: pre-wrap; word-break: break-word; }
+.hint { margin: 12px 0 0; font-size: 12px; line-height: 1.55; }
+.warning { color: #f2c66d; }
+#message { position: sticky; bottom: 12px; min-height: 20px; margin: 18px 0 0; padding: 10px 12px; border-radius: 10px; background: #101a27e8; color: #cce4ff; text-align: center; opacity: 0; transition: opacity .2s; }
+#message.visible { opacity: 1; }
+@media (max-width: 420px) { .button-grid.three { grid-template-columns: 1fr; } }

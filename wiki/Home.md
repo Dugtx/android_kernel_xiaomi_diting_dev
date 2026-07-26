@@ -26,6 +26,7 @@ AnyKernel3 changes, prepare a stock boot fallback, or run Docker userspace.
 3. [Contributing / 参与贡献](../CONTRIBUTING.md)
 4. [Security and publication / 安全与发布](Security-and-Publication.md)
 5. [Third-party components / 第三方组件](../THIRD_PARTY.md)
+6. [CI and release workflows / CI 与发布工作流](CI-and-Releases.md)
 
 Developers should choose the target branch before changing configuration or
 vendor-facing code. A successful compile does not prove Xiaomi module

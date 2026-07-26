@@ -1,0 +1,50 @@
+name: Docker KernelSU module
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - runtime/kernelsu/docker/**
+      - .github/workflows/docker-module.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-module-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Validate module source
+        run: runtime/kernelsu/docker/validate-source.sh
+
+      - name: Read module version
+        id: version
+        run: |
+          version="$(sed -n 's/^version=//p' runtime/kernelsu/docker/module.prop)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build pinned module package
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          OUTPUT="$GITHUB_WORKSPACE/out/diting-docker-kernelsu-v$VERSION.zip" \
+            runtime/kernelsu/docker/build-package.sh --download
+
+      - name: Publish workflow artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: diting-docker-kernelsu-${{ github.sha }}
+          path: |
+            out/diting-docker-kernelsu-v${{ steps.version.outputs.version }}.zip
+            out/diting-docker-kernelsu-v${{ steps.version.outputs.version }}.zip.sha256
+          if-no-files-found: error
+          retention-days: 14

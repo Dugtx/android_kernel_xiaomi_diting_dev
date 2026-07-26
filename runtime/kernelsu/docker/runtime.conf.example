@@ -1,0 +1,7 @@
+# Values are parsed by an allowlist. Shell expressions are never evaluated.
+AUTO_START=1
+CGROUP_MODE=v2
+NETWORK_MODE=isolated
+DOCKER_IMAGE_SIZE=8G
+DNS1=223.5.5.5
+DNS2=1.1.1.1
