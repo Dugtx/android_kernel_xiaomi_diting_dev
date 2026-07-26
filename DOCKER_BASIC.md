@@ -13,6 +13,21 @@ This branch does not contain KernelSU, SUSFS, Magisk, a root manager, or a
 modified Android ramdisk. Root access is a separate boot-image/userspace
 choice.
 
+## Compatibility boundary
+
+This release is adapted and validated only for HyperOS
+`OS2.0.211.0.VLFCNXM`. It is not a generic GKI release for other HyperOS or
+AOSP-derived ROMs. Every other ROM needs a new vendor-module/KMI comparison,
+boot test and hardware-function acceptance pass.
+
+Several Docker additions are fitted into slots unused by the accepted stock
+configuration: PIDS replaces the inactive legacy `net_prio` cgroup slot,
+DEVICE replaces the inactive legacy freezer cgroup slot, and additional IPC,
+CFS-bandwidth and block-throttling state uses Android KABI reserve fields.
+This avoids enlarging the corresponding frozen structures. The term "spare
+slot" refers to cgroup/KABI structure storage, not an A/B boot slot, and it
+does not create cross-ROM compatibility.
+
 ## Scope
 
 The first round contains only the low-risk options already proven to compile

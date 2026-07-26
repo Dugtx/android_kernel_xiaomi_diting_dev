@@ -10,6 +10,13 @@
 Google Build `14313284` 对应的 ACK/GKI 5.10，并保持 HyperOS
 `OS2.0.211.0.VLFCNXM` 所需的小米厂商模块 ABI。
 
+> **兼容性与实现边界：** 当前只针对 HyperOS
+> `OS2.0.211.0.VLFCNXM` 这一款 ROM 完成适配和真机验收，未承诺兼容同设备的
+> 其他 HyperOS 版本或类原生 ROM。为保持厂商 ABI，PIDS、DEVICE 等增量状态
+> 复用了原内核未启用的 cgroup 槽位和 Android KABI 预留槽位，没有扩大对应冻结
+> 结构。这里的“空槽位”是内核结构/KABI 槽位，与手机 A/B 启动槽无关，也不代表
+> 内核具备跨 ROM 通用性。
+
 该仓库不包含任何内核 Root 实现，也不包含 KernelSU、SUSFS、Magisk、管理器、
 boot 镜像或 Docker 用户态二进制。
 
@@ -66,6 +73,15 @@ build/build.sh -j"$(nproc)"
 Docker-capable Android kernel for the Redmi K50 Ultra (`diting`, Snapdragon
 8+ Gen 1), based on ACK/GKI 5.10 from Google Build `14313284`. It preserves
 the Xiaomi vendor-module ABI required by HyperOS `OS2.0.211.0.VLFCNXM`.
+
+> **Compatibility and implementation boundary:** only HyperOS
+> `OS2.0.211.0.VLFCNXM` has been adapted and validated on-device. Other
+> HyperOS builds and AOSP-derived ROMs on the same phone are not supported by
+> this release. To preserve the vendor ABI, PIDS, DEVICE and related state
+> reuse inactive cgroup slots and Android KABI reserve fields instead of
+> growing frozen structures. These "spare slots" are kernel structure/KABI
+> slots, not the phone's A/B boot slots, and do not provide cross-ROM
+> compatibility.
 
 This repository contains no kernel root implementation. KernelSU, SUSFS,
 Magisk, manager applications, boot images and container runtime binaries are

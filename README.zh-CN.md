@@ -6,6 +6,13 @@
 Google Build `14313284` 对应的 ACK/GKI 5.10，并保持 HyperOS
 `OS2.0.211.0.VLFCNXM` 所需的小米厂商模块 ABI。
 
+> **兼容性与实现边界：** 当前只针对 HyperOS
+> `OS2.0.211.0.VLFCNXM` 这一款 ROM 完成适配和真机验收，未承诺兼容同设备的
+> 其他 HyperOS 版本或类原生 ROM。为保持厂商 ABI，PIDS、DEVICE 等增量状态
+> 复用了原内核未启用的 cgroup 槽位和 Android KABI 预留槽位，没有扩大对应冻结
+> 结构。这里的“空槽位”是内核结构/KABI 槽位，与手机 A/B 启动槽无关，也不代表
+> 内核具备跨 ROM 通用性。
+
 该仓库不包含任何内核 Root 实现，也不包含 KernelSU、SUSFS、Magisk、管理器、
 boot 镜像或 Docker 用户态二进制。
 

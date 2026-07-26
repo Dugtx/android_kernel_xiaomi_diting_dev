@@ -23,6 +23,18 @@ Magisk、Root 管理器或修改后的 Android ramdisk；Root 和用户态 Docke
 涉及小米闭源厂商模块内部布局的配置使用受保护的 KABI 兼容实现。最终
 `vmlinux.symvers`、`abi.xml` 与 `abi_symbollist` 必须和纯净 ACK 基线逐字节一致。
 
+## 兼容性与空槽位说明
+
+当前发布版仅为 HyperOS `OS2.0.211.0.VLFCNXM` 适配并完成真机验收，不是面向
+其他 HyperOS 或类原生 ROM 的通用 GKI 内核。更换 ROM 后必须重新完成厂商模块
+KMI 对比、临时启动和硬件功能验收。
+
+为避免扩大厂商模块可能依赖的冻结结构，PIDS 复用原配置未启用的 legacy
+`net_prio` cgroup 槽位，DEVICE 复用未启用的 legacy freezer cgroup 槽位，IPC、
+CFS bandwidth 和块 I/O 限速状态则复用 Android KABI reserve 字段。这里所说的
+“空槽位”是 cgroup/KABI 内部结构的空闲或预留槽位，不是手机的 A/B 启动槽，
+也不会自然带来跨 ROM 兼容能力。
+
 ## 已验证环境
 
 目标设备为 Redmi K50 Ultra（`diting`），系统为 HyperOS
