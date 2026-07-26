@@ -37,6 +37,10 @@ where a runtime structure needs additional state.
 - CFS bandwidth state preserves scheduler layouts and symbol CRCs
 - block throttling uses an Android KABI reserve in `request_queue`
 
+“空槽位 / spare slot”在本文中只表示上述未启用的 cgroup 槽位或 Android KABI
+reserve 字段，与设备的 A/B boot slot 无关。它维持当前参考 ROM 的结构尺寸，
+但不能证明其他 ROM 与相同布局、符号 CRC 或厂商模块兼容。
+
 The adapters are device- and baseline-specific. They should not be copied to a
 different kernel release without BTF/layout, symbol CRC and real-device tests.
 

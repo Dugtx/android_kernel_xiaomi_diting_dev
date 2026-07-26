@@ -34,6 +34,12 @@ internal layout:
 - CFS bandwidth preserves scheduler data layouts.
 - block throttling places `request_queue::td` in an Android KABI reserve.
 
+These are cgroup/KABI structure slots, not A/B boot slots. Reusing them keeps
+the accepted structure sizes but does not make the result ROM-independent.
+This release has been adapted and validated only on HyperOS
+`OS2.0.211.0.VLFCNXM`; every other ROM requires a fresh KMI, boot and hardware
+acceptance cycle.
+
 Direct, non-compatibility cgroup profiles remain only as diagnostic source and
 are not inherited by the release profile.
 

@@ -16,8 +16,8 @@ are presented together where operational details matter.
 - Device / 设备：Redmi K50 Ultra
 - Codename / 代号：`diting`
 - SoC：Qualcomm Snapdragon 8+ Gen 1 (`SM8475`)
-- Tested ROM family / 目标系统：HyperOS 2, Android 15
-- Reference build / 参考版本：`OS2.0.211.0.VLFCNXM`
+- Only adapted ROM / 唯一适配系统：HyperOS 2
+  `OS2.0.211.0.VLFCNXM`, Android 15
 - Kernel base / 内核基础：ACK 5.10.236, Android 12-5.10 GKI
 - Page size / 页大小：4 KiB
 

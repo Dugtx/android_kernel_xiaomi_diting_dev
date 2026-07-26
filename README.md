@@ -11,6 +11,12 @@ KernelSU-Next v3.3.0 与经过验收的 Docker 内核配置组合。项目基于
 Build `14313284` 对应的 ACK/GKI 5.10，并保持 HyperOS
 `OS2.0.211.0.VLFCNXM` 所需的小米厂商模块 ABI。
 
+> **兼容性与实现边界：** 当前只针对 HyperOS
+> `OS2.0.211.0.VLFCNXM` 这一款 ROM 完成适配和真机验收，未承诺兼容同设备的
+> 其他 HyperOS 版本或类原生 ROM。Docker 相关的 PIDS、DEVICE 等增量状态复用
+> 原内核未启用的 cgroup 槽位和 Android KABI 预留槽位，以避免扩大冻结结构。
+> 这里的“空槽位”不是手机 A/B 启动槽，也不等于通用 ROM 支持。
+
 该仓库不包含 SUSFS 或未公开实验功能。
 
 ### 能力
@@ -82,6 +88,14 @@ Daily-use kernel for the Redmi K50 Ultra (`diting`, Snapdragon 8+ Gen 1),
 combining KernelSU-Next v3.3.0 with the validated Docker kernel profile. It is
 based on ACK/GKI 5.10 from Google Build `14313284` and preserves the Xiaomi
 vendor-module ABI required by HyperOS `OS2.0.211.0.VLFCNXM`.
+
+> **Compatibility and implementation boundary:** only HyperOS
+> `OS2.0.211.0.VLFCNXM` has been adapted and validated on-device. Other
+> HyperOS builds and AOSP-derived ROMs on the same phone are not supported by
+> this release. Docker-related PIDS, DEVICE and other state reuse inactive
+> cgroup slots and Android KABI reserve fields to avoid growing frozen
+> structures. These "spare slots" are not A/B boot slots and do not imply
+> generic ROM support.
 
 SUSFS and unpublished experimental features are not present in this
 repository.
