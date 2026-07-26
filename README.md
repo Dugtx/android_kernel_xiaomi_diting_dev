@@ -2,7 +2,8 @@
 
 [简体中文](#简体中文) | [English](#english)
 
-[下载 / Downloads](https://github.com/Dugtx/android_kernel_xiaomi_diting_docker/releases)
+[统一仓库 / Unified repository](https://github.com/Dugtx/android_kernel_xiaomi_diting) |
+[下载 / Downloads](https://github.com/Dugtx/android_kernel_xiaomi_diting/releases)
 
 ## 简体中文
 
