@@ -21,7 +21,7 @@ granted repository permissions.
 ## Docker userspace module / Docker 用户态模块
 
 The Docker KernelSU module is maintained and packaged in
-[docker-runtime-ksu-modle](https://github.com/Dugtx/docker-runtime-ksu-modle).
+[docker-runtime-ksu-module](https://github.com/Dugtx/docker-runtime-ksu-module).
 Keeping runtime source and release automation there allows this repository's CI
 to stay focused on kernel builds and KMI evidence.
 
