@@ -4,8 +4,8 @@ ui_print "- Docker Runtime for Redmi K50 Ultra"
 
 device="$(getprop ro.product.device)"
 [ "$device" = "diting" ] || abort "This module supports diting only; detected: $device"
-[ -x "$MODPATH/bin/dockerd" ] || abort "The module package is incomplete: dockerd is missing"
-[ -x "$MODPATH/bin/docker" ] || abort "The module package is incomplete: docker is missing"
+[ -f "$MODPATH/bin/dockerd" ] || abort "The module package is incomplete: dockerd is missing"
+[ -f "$MODPATH/bin/docker" ] || abort "The module package is incomplete: docker is missing"
 
 STATE=/data/unencrypted/docker
 mkdir -p "$STATE/config"
