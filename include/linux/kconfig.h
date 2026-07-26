@@ -6,6 +6,45 @@
 
 #include <generated/autoconf.h>
 
+/*
+ * Xiaomi's out-of-tree modules were built with legacy freezer and net_prio
+ * cgroup subsystems. Compatibility profiles may replace those unused v1
+ * controllers with devices and PIDS at runtime, but genksyms must retain the
+ * stock configuration view so exported symbol CRCs stay unchanged.
+ */
+#if defined(__GENKSYMS__) && \
+	defined(CONFIG_XIAOMI_CGROUP_DEVICE_KABI_COMPAT)
+#undef CONFIG_CGROUP_DEVICE
+#define CONFIG_CGROUP_FREEZER 1
+#endif
+
+#if defined(__GENKSYMS__) && \
+	defined(CONFIG_XIAOMI_CGROUP_PIDS_KABI_COMPAT)
+#undef CONFIG_CGROUP_PIDS
+#define CONFIG_CGROUP_NET_PRIO 1
+#endif
+
+#if defined(__GENKSYMS__) && \
+	defined(CONFIG_XIAOMI_BRIDGE_NETFILTER_KABI_COMPAT)
+#undef CONFIG_BRIDGE_NETFILTER
+#undef CONFIG_NETFILTER_FAMILY_BRIDGE
+#endif
+
+#if defined(__GENKSYMS__) && \
+	defined(CONFIG_XIAOMI_IPC_KABI_COMPAT)
+#undef CONFIG_SYSVIPC
+#undef CONFIG_SYSVIPC_COMPAT
+#undef CONFIG_SYSVIPC_SYSCTL
+#undef CONFIG_POSIX_MQUEUE
+#undef CONFIG_POSIX_MQUEUE_SYSCTL
+#undef CONFIG_IPC_NS
+#endif
+
+#if defined(__GENKSYMS__) && \
+	defined(CONFIG_XIAOMI_CFS_BANDWIDTH_KABI_COMPAT)
+#undef CONFIG_CFS_BANDWIDTH
+#endif
+
 #ifdef CONFIG_CPU_BIG_ENDIAN
 #define __BIG_ENDIAN 4321
 #else

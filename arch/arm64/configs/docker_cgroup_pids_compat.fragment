@@ -1,0 +1,6 @@
+# Preserve CGROUP_SUBSYS_COUNT=7 for Xiaomi vendor-module compatibility.
+# net_prio is enabled in stock but is not mounted or attached to a hierarchy.
+# PIDS takes its final subsystem slot without growing struct css_set.
+# CONFIG_CGROUP_NET_PRIO is not set
+CONFIG_CGROUP_PIDS=y
+CONFIG_XIAOMI_CGROUP_PIDS_KABI_COMPAT=y

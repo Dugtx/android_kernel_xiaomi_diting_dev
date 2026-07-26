@@ -1,0 +1,4 @@
+# Docker process isolation round.
+# Keep CHECKPOINT_RESTORE in a later profile. IPC and user namespace support
+# are added by separate profiles so this PID-only image remains bisectable.
+CONFIG_PID_NS=y

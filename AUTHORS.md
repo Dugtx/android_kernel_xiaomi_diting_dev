@@ -1,7 +1,13 @@
 # Authors and maintainers
 
-- Dugtx — device integration, validation and release maintenance
-- Linux and Android Common Kernel contributors — upstream kernel work
+## Project maintenance
 
-Git history and file-level copyright notices remain the authoritative source
-of authorship for upstream code.
+- Dugtx — project owner, integration, KABI compatibility work, validation and
+  release maintenance
+
+## Upstream projects
+
+This repository is derived from Linux and the Android Common Kernel and uses
+KernelSU-Next as a pinned Git submodule on the KSUN-enabled branches. Their
+contributors retain authorship of their respective work. See Git history,
+[THIRD_PARTY.md](THIRD_PARTY.md) and the license files in each source tree.

@@ -996,6 +996,18 @@ config CFS_BANDWIDTH
 	  restriction.
 	  See Documentation/scheduler/sched-bwc.rst for more information.
 
+config XIAOMI_CFS_BANDWIDTH_KABI_COMPAT
+	bool "Xiaomi GKI-compatible CFS bandwidth state"
+	depends on CFS_BANDWIDTH
+	help
+	  Preserve Xiaomi's stock scheduler structure layouts while enabling
+	  CFS bandwidth control. The task-group bandwidth object and per-cfs_rq
+	  runtime state are stored outside the frozen structures, and genksyms
+	  retains the stock CFS_BANDWIDTH-disabled view for vendor-module CRCs.
+
+	  This is a device compatibility option. Enable it only when the stock
+	  vendor modules were built with CONFIG_CFS_BANDWIDTH disabled.
+
 config RT_GROUP_SCHED
 	bool "Group scheduling for SCHED_RR/FIFO"
 	depends on CGROUP_SCHED
@@ -1046,6 +1058,17 @@ config CGROUP_PIDS
 	  to a cgroup hierarchy) will *not* be blocked by the PIDs controller,
 	  since the PIDs limit only affects a process's ability to fork, not to
 	  attach to a cgroup.
+
+config XIAOMI_CGROUP_PIDS_KABI_COMPAT
+	bool "Xiaomi GKI-compatible PIDs controller layout"
+	depends on CGROUP_PIDS && !CGROUP_NET_PRIO
+	help
+	  Preserve the stock net_prio cgroup enum as seen by genksyms while the
+	  running kernel replaces that unused controller with PIDS. This keeps
+	  Xiaomi GKI vendor-module symbol CRCs and cgroup structure sizes stable.
+
+	  This is a device compatibility option and must not be enabled together
+	  with the net_prio controller.
 
 config CGROUP_RDMA
 	bool "RDMA controller"
@@ -1105,6 +1128,18 @@ config CGROUP_DEVICE
 	help
 	  Provides a cgroup controller implementing whitelists for
 	  devices which a process in the cgroup can mknod or open.
+
+config XIAOMI_CGROUP_DEVICE_KABI_COMPAT
+	bool "Xiaomi GKI-compatible device controller layout"
+	depends on CGROUP_DEVICE && !CGROUP_FREEZER
+	help
+	  Preserve the stock legacy freezer cgroup enum as seen by genksyms
+	  while the running kernel replaces that unused v1 controller with the
+	  device controller. This keeps Xiaomi GKI vendor-module symbol CRCs and
+	  cgroup structure sizes stable. The cgroup2 freezer remains available.
+
+	  This is a device compatibility option and must not be enabled together
+	  with the legacy freezer controller.
 
 config CGROUP_CPUACCT
 	bool "Simple CPU accounting controller"
@@ -1188,6 +1223,15 @@ config IPC_NS
 	help
 	  In this namespace tasks work with IPC ids which correspond to
 	  different IPC objects in different namespaces.
+
+config XIAOMI_IPC_KABI_COMPAT
+	bool "Xiaomi GKI-compatible IPC structure layout"
+	depends on SYSVIPC && POSIX_MQUEUE && IPC_NS
+	help
+	  Store System V IPC and POSIX mqueue accounting state in existing
+	  Android kABI reserves. Genksyms retains the stock configuration view,
+	  keeping Xiaomi vendor-module CRCs and pre-existing structure layouts
+	  stable while IPC namespaces remain enabled at runtime.
 
 config USER_NS
 	bool "User namespace"

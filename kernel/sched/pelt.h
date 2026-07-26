@@ -151,10 +151,12 @@ static inline u64 rq_clock_pelt(struct rq *rq)
 /* rq->task_clock normalized against any time this cfs_rq has spent throttled */
 static inline u64 cfs_rq_clock_pelt(struct cfs_rq *cfs_rq)
 {
-	if (unlikely(cfs_rq->throttle_count))
-		return cfs_rq->throttled_clock_pelt - cfs_rq->throttled_clock_pelt_time;
+	if (unlikely(cfs_rq_throttle_count(cfs_rq)))
+		return cfs_rq_throttled_clock_pelt(cfs_rq) -
+		       cfs_rq_throttled_clock_pelt_time(cfs_rq);
 
-	return rq_clock_pelt(rq_of(cfs_rq)) - cfs_rq->throttled_clock_pelt_time;
+	return rq_clock_pelt(rq_of(cfs_rq)) -
+	       cfs_rq_throttled_clock_pelt_time(cfs_rq);
 }
 #else
 static inline u64 cfs_rq_clock_pelt(struct cfs_rq *cfs_rq)

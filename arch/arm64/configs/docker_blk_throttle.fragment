@@ -1,0 +1,3 @@
+# Block I/O throttling on top of the verified CFS bandwidth profile.
+CONFIG_BLK_DEV_THROTTLING=y
+CONFIG_XIAOMI_BLK_THROTTLE_KABI_COMPAT=y
